@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat History — AI Tourist</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    .message-content { white-space: pre-wrap; }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state h3 { color: var(--text); margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="navbar-brand"><span>🌍</span> AI Tourist</a>
+    <div class="navbar-links" id="nav-auth"></div>
+  </nav>
+
+  <!-- List view -->
+  <div class="page-container" id="list-view">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <h1 class="page-title" style="margin:0;" data-i18n="history_title"></h1>
+      <a href="/" class="btn btn-primary btn-sm" data-i18n="btn_new_chat_hist"></a>
+    </div>
+    <div id="alert" class="alert"></div>
+    <div id="chat-list" class="chat-list">
+      <div style="text-align:center;padding:40px;color:var(--text-muted);"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- Detail view -->
+  <div class="chat-detail" id="detail-view" style="display:none;">
+    <a href="#" class="chat-back" id="back-btn" data-i18n="btn_back_history"></a>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <h2 id="detail-title" style="font-size:20px;"></h2>
+      <button class="btn btn-danger btn-sm" id="delete-chat-btn" data-i18n="btn_delete_chat"></button>
+    </div>
+    <div class="messages-container" id="detail-messages"></div>
+    <div style="background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;">
+      <div class="chat-input-row">
+        <textarea id="detail-input" data-i18n-placeholder="continue_placeholder" rows="1"
+          style="flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;padding:10px 14px;resize:none;outline:none;font-family:inherit;"></textarea>
+        <button class="send-btn" id="detail-send-btn" onclick="sendDetailMessage()">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/i18n.js?v=2"></script>
+  <script src="/static/js/api.js?v=2"></script>
+  <script>
+    let activeChatId = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!api.requireAuth()) return;
+      applyTranslations();
+      initNavbar();
+      loadChats();
+    });
+
+    async function loadChats() {
+      try {
+        const chats = await api.get('/api/chats');
+        const container = document.getElementById('chat-list');
+
+        if (!chats.length) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="icon">💬</div>
+              <h3>${t('history_empty')}</h3>
+              <p>${t('history_empty_sub')}</p>
+              <a href="/" class="btn btn-primary" style="margin-top:16px;">${t('btn_go_to_map')}</a>
+            </div>`;
+          return;
+        }
+
+        container.innerHTML = chats.map(chat => `
+          <div class="chat-item" onclick="openChat(${chat.id})">
+            <div class="chat-item-info">
+              <h4>Conversation #${chat.id}</h4>
+              <p>${chat.last_message || '—'}</p>
+            </div>
+            <div class="chat-item-meta">
+              <div>${formatDate(chat.izveides_datums)}</div>
+              <div style="margin-top:4px;">${chat.message_count} ${t('messages_label')}</div>
+              <div style="margin-top:4px;"><span class="badge badge-${chat.statuss === 'active' ? 'active' : 'closed'}">${chat.statuss}</span></div>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        showAlert(document.getElementById('alert'), e.message);
+      }
+    }
+
+    async function openChat(chatId) {
+      activeChatId = chatId;
+      document.getElementById('list-view').style.display = 'none';
+      document.getElementById('detail-view').style.display = 'block';
+      applyTranslations();
+
+      try {
+        const chat = await api.get(`/api/chats/${chatId}`);
+        document.getElementById('detail-title').textContent = `Conversation #${chat.id}`;
+
+        const container = document.getElementById('detail-messages');
+        if (!chat.zinojumi.length) {
+          container.innerHTML = `<p style="color:var(--text-muted);text-align:center;padding:20px;">${t('history_no_messages')}</p>`;
+        } else {
+          container.innerHTML = chat.zinojumi.map(m => `
+            <div class="message ${m.zinaojuma_tips}" style="max-width:88%;">
+              <div class="message-content">${escapeHtml(m.saturs)}</div>
+              <div class="message-time">${formatDate(m.nosutisanas_laiks)}</div>
+            </div>
+          `).join('');
+          container.scrollTop = container.scrollHeight;
+        }
+      } catch (e) {
+        alert('Error loading chat: ' + e.message);
+      }
+    }
+
+    async function sendDetailMessage() {
+      const input = document.getElementById('detail-input');
+      const text = input.value.trim();
+      if (!text || !activeChatId) return;
+
+      const btn = document.getElementById('detail-send-btn');
+      btn.disabled = true;
+      input.value = '';
+
+      try {
+        const msgs = await api.post(`/api/chats/${activeChatId}/messages`, { saturs: text });
+        const container = document.getElementById('detail-messages');
+        for (const m of msgs) {
+          const div = document.createElement('div');
+          div.className = `message ${m.zinaojuma_tips}`;
+          div.innerHTML = `<div class="message-content">${escapeHtml(m.saturs)}</div><div class="message-time">${formatDate(m.nosutisanas_laiks)}</div>`;
+          container.appendChild(div);
+        }
+        container.scrollTop = container.scrollHeight;
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+      btn.disabled = false;
+    }
+
+    document.getElementById('back-btn').addEventListener('click', e => {
+      e.preventDefault();
+      document.getElementById('detail-view').style.display = 'none';
+      document.getElementById('list-view').style.display = 'block';
+      activeChatId = null;
+      loadChats();
+    });
+
+    document.getElementById('delete-chat-btn').addEventListener('click', async () => {
+      if (!confirm(t('confirm_delete_chat'))) return;
+      try {
+        await api.delete(`/api/chats/${activeChatId}`);
+        document.getElementById('back-btn').click();
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    });
+
+    document.getElementById('detail-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendDetailMessage(); }
+    });
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+  </script>
+</body>
+</html>

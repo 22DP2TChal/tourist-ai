@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel — AI Tourist</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="navbar-brand"><span>🌍</span> AI Tourist</a>
+    <div class="navbar-links" id="nav-auth"></div>
+  </nav>
+
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <a href="#section-stats" class="active" onclick="showSection('stats',this)">📊 Statistics</a>
+      <a href="#section-users" onclick="showSection('users',this)">👥 Users</a>
+      <a href="#section-objects" onclick="showSection('objects',this)">🏛️ Attractions</a>
+    </aside>
+
+    <!-- Main content -->
+    <main class="admin-content">
+
+      <!-- Stats section -->
+      <div id="section-stats">
+        <h2 class="section-title">📊 System Statistics</h2>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-users">—</div>
+            <div class="stat-label">Total users</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-chats">—</div>
+            <div class="stat-label">Total chats</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-messages">—</div>
+            <div class="stat-label">Total messages</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-active">—</div>
+            <div class="stat-label">Active chats</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users section -->
+      <div id="section-users" style="display:none;">
+        <h2 class="section-title">👥 Users</h2>
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Email</th>
+                <th>Language</th>
+                <th>Registered</th>
+                <th>Chats</th>
+                <th>Role</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody">
+              <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Attractions section -->
+      <div id="section-objects" style="display:none;">
+        <h2 class="section-title">🏛️ Attractions</h2>
+
+        <!-- Add/Edit form -->
+        <div class="object-form">
+          <h3 id="form-title">Add New Attraction</h3>
+          <form id="object-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Name</label>
+                <input type="text" name="nosaukums" placeholder="e.g. Freedom Monument" required>
+              </div>
+              <div class="form-group">
+                <label>Category</label>
+                <select name="kategorija">
+                  <option value="attraction">Attraction</option>
+                  <option value="monument">Monument</option>
+                  <option value="church">Church</option>
+                  <option value="historic">Historic site</option>
+                  <option value="castle">Castle</option>
+                  <option value="museum">Museum</option>
+                  <option value="street">Street</option>
+                  <option value="market">Market</option>
+                  <option value="theater">Theater</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <input type="text" name="iss_apraksts" placeholder="Short description of the attraction">
+            </div>
+            <div class="form-group">
+              <label>Address / Location</label>
+              <input type="text" name="lokacijas_vieta" placeholder="e.g. Brīvības bulvāris, Rīga">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Latitude</label>
+                <input type="text" name="latitude" placeholder="e.g. 56.9513">
+              </div>
+              <div class="form-group">
+                <label>Longitude</label>
+                <input type="text" name="longitude" placeholder="e.g. 24.1134">
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;">
+              <button type="submit" class="btn btn-primary" id="submit-btn" style="width:auto;">Add Attraction</button>
+              <button type="button" class="btn btn-ghost" onclick="cancelEdit()">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Objects table -->
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Address</th>
+                <th>Coordinates</th>
+                <th>Category</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="objects-tbody">
+              <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="/static/js/i18n.js?v=2"></script>
+  <script src="/static/js/api.js?v=2"></script>
+  <script src="/static/js/admin.js?v=2"></script>
+  <script>
+    function showSection(name, el) {
+      document.querySelectorAll('.admin-content > div').forEach(d => d.style.display = 'none');
+      document.getElementById('section-' + name).style.display = 'block';
+      document.querySelectorAll('.admin-sidebar a').forEach(a => a.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    function cancelEdit() {
+      const form = document.getElementById('object-form');
+      form.reset();
+      delete form.dataset.editId;
+      document.getElementById('form-title').textContent = 'Add New Attraction';
+      document.getElementById('submit-btn').textContent = 'Add Attraction';
+    }
+
+    document.addEventListener('DOMContentLoaded', initAdmin);
+  </script>
+</body>
+</html>
