@@ -33,6 +33,7 @@ class MessageCreate(BaseModel):
     saturs: str
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    address: Optional[str] = None
 
 
 class MessageResponse(BaseModel):
@@ -40,6 +41,7 @@ class MessageResponse(BaseModel):
     saturs: str
     nosutisanas_laiks: datetime
     zinaojuma_tips: str
+    image_url: Optional[str] = None
 
     model_config = {"from_attributes": True}
 

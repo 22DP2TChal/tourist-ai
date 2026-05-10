@@ -55,8 +55,9 @@
     <div class="chat-panel">
 
       <div class="chat-tabs">
-        <div class="chat-tab active" id="tab-chat" onclick="switchTab('chat')" data-i18n="tab_chat"></div>
-        <div class="chat-tab" id="tab-places" onclick="switchTab('places')" data-i18n="tab_nearby"></div>
+        <div class="chat-tab active" id="tab-chat"   onclick="switchTab('chat')"   data-i18n="tab_chat"></div>
+        <div class="chat-tab"        id="tab-places" onclick="switchTab('places')" data-i18n="tab_nearby"></div>
+        <div class="chat-tab"        id="tab-live"   onclick="switchTab('live')"   data-i18n="tab_live"></div>
       </div>
 
       <div class="tab-panel active" id="panel-chat">
@@ -78,8 +79,18 @@
             <div class="dot" id="location-dot"></div>
             <span id="location-text" data-i18n="detecting_location"></span>
           </div>
+          <input type="file" id="image-input" accept="image/*" style="display:none;">
           <div class="chat-input-row">
-            <button class="voice-btn" id="voice-btn" title="Voice input">🎤</button>
+            <div class="voice-wrap" id="voice-wrap" style="display:none;">
+              <button class="voice-btn" id="voice-btn" title="Voice input">🎤</button>
+              <select id="voice-lang" class="voice-lang-select">
+                <option value="auto">🌐</option>
+                <option value="en-US">EN</option>
+                <option value="lv-LV">LV</option>
+                <option value="ru-RU">RU</option>
+              </select>
+            </div>
+            <button class="voice-btn" id="image-btn" title="Send image">📷</button>
             <textarea id="chat-input" data-i18n-placeholder="chat_placeholder" rows="1"></textarea>
             <button class="send-btn" id="send-btn">➤</button>
           </div>
@@ -91,6 +102,58 @@
           <h3 data-i18n="nearby_title"></h3>
         </div>
         <div id="objects-tab" style="overflow-y:auto;flex:1;"></div>
+      </div>
+
+      <!-- Live AI tab -->
+      <div class="tab-panel" id="panel-live">
+        <div class="live-panel">
+
+          <!-- Status bar -->
+          <div class="live-status-bar">
+            <div class="live-dot idle" id="live-dot"></div>
+            <span class="live-status-label" id="live-status-label" data-i18n="live_status_idle"></span>
+          </div>
+
+          <!-- Conversation history -->
+          <div class="live-messages chat-messages" id="live-messages"></div>
+
+          <!-- No browser support notice -->
+          <div id="live-no-support" class="live-no-support" style="display:none;">
+            <div style="font-size:36px;">⚠️</div>
+            <p data-i18n="live_no_support"></p>
+          </div>
+
+          <!-- Live speech bubble — appears as user speaks, in real time -->
+          <div class="live-bubble-area" id="live-bubble-area" style="display:none;">
+            <div class="live-bubble">
+              <span id="live-bubble-text"></span><span class="live-cursor" id="live-cursor">|</span>
+            </div>
+          </div>
+
+          <!-- Controls -->
+          <div class="live-bottom" id="live-ready">
+            <div style="display:flex;flex-direction:column;gap:5px;flex:1;">
+              <select id="live-lang-sel" class="live-lang-sel">
+                <option value="en-US">🇬🇧 English</option>
+                <option value="lv-LV">🇱🇻 Latviešu</option>
+                <option value="ru-RU">🇷🇺 Русский</option>
+              </select>
+              <select id="live-voice-sel" class="live-lang-sel">
+                <option value="nova">🔊 Nova ♀</option>
+                <option value="alloy">🔊 Alloy</option>
+                <option value="echo">🔊 Echo ♂</option>
+                <option value="fable">🔊 Fable ♀</option>
+                <option value="onyx">🔊 Onyx ♂</option>
+                <option value="shimmer">🔊 Shimmer ♀</option>
+              </select>
+            </div>
+
+            <button id="live-start-btn" class="live-start-btn" title="Start conversation">🎤</button>
+
+            <button id="live-skip-btn" class="live-mute-btn" title="Skip AI speech" style="display:none;">⏭</button>
+          </div>
+
+        </div>
       </div>
 
     </div>
@@ -106,10 +169,13 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+  <script>marked.use({ breaks: true, gfm: true });</script>
   <script src="/static/js/i18n.js?v=2"></script>
   <script src="/static/js/api.js?v=2"></script>
-  <script src="/static/js/chat.js?v=2"></script>
-  <script src="/static/js/map.js?v=2"></script>
+  <script src="/static/js/chat.js?v=9"></script>
+  <script src="/static/js/live.js?v=6"></script>
+  <script src="/static/js/map.js?v=6"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       applyTranslations();
@@ -123,9 +189,14 @@
 
       initMap();
       initChat();
+      initLiveAI();
     });
 
     function switchTab(tab) {
+      // Stop camera if leaving live tab
+      const wasLive = document.getElementById('panel-live')?.classList.contains('active');
+      if (wasLive && tab !== 'live') onLiveTabLeave?.();
+
       document.querySelectorAll('.chat-tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       document.getElementById('tab-' + tab).classList.add('active');

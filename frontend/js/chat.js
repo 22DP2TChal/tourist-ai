@@ -1,17 +1,15 @@
 let currentChatId = null;
 let userLocation = null;
 let isWaitingForAI = false;
+let pendingImage = null; // { file, previewUrl }
 
 async function initChat() {
   if (!api.isLoggedIn()) return;
 
-  const newBtn = document.getElementById('new-chat-btn');
-  if (newBtn) newBtn.addEventListener('click', startNewChat);
+  document.getElementById('new-chat-btn')?.addEventListener('click', startNewChat);
+  document.getElementById('send-btn')?.addEventListener('click', sendMessage);
 
-  const sendBtn = document.getElementById('send-btn');
   const textarea = document.getElementById('chat-input');
-
-  if (sendBtn) sendBtn.addEventListener('click', sendMessage);
   if (textarea) {
     textarea.addEventListener('keydown', e => {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
@@ -19,6 +17,23 @@ async function initChat() {
     textarea.addEventListener('input', () => {
       textarea.style.height = 'auto';
       textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    });
+  }
+
+  // Image upload button
+  const imageBtn = document.getElementById('image-btn');
+  const imageInput = document.getElementById('image-input');
+  if (imageBtn && imageInput) {
+    imageBtn.addEventListener('click', () => imageInput.click());
+    imageInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) { alert('Please select an image file'); return; }
+      if (file.size > 10 * 1024 * 1024) { alert('Image must be under 10MB'); return; }
+
+      pendingImage = { file, previewUrl: URL.createObjectURL(file) };
+      showImagePreview(pendingImage.previewUrl);
+      imageInput.value = '';
     });
   }
 
@@ -37,34 +52,15 @@ async function startNewChat() {
   }
 }
 
-async function loadChat(chatId) {
-  try {
-    const chat = await api.get(`/api/chats/${chatId}`);
-    currentChatId = chat.id;
-    clearMessages();
-    document.getElementById('chat-title').textContent = `Chat #${chat.id}`;
-
-    if (chat.zinojumi && chat.zinojumi.length > 0) {
-      showEmptyState(false);
-      for (const msg of chat.zinojumi) {
-        appendMessage(msg.saturs, msg.zinaojuma_tips, msg.nosutisanas_laiks);
-      }
-    } else {
-      showEmptyState(true);
-    }
-  } catch (e) {
-    console.error(e);
-  }
-}
-
 async function sendMessage() {
   if (isWaitingForAI) return;
 
   const textarea = document.getElementById('chat-input');
   const text = textarea.value.trim();
-  if (!text) return;
+  const imageToSend = pendingImage; // capture before any awaits
 
-  if (!currentChatId) await startNewChat();
+  if (!text && !imageToSend) return;
+  if (!currentChatId) await startNewChat(); // may call clearImagePreview internally
 
   textarea.value = '';
   textarea.style.height = 'auto';
@@ -74,14 +70,21 @@ async function sendMessage() {
   showTyping(true);
 
   try {
-    const msgs = await api.post(`/api/chats/${currentChatId}/messages`, {
-      saturs: text,
-      latitude: userLocation?.lat || null,
-      longitude: userLocation?.lng || null,
-    });
+    let msgs;
+    if (imageToSend) {
+      clearImagePreview();
+      msgs = await sendImageToAPI(currentChatId, imageToSend.file, text, imageToSend.previewUrl);
+    } else {
+      msgs = await api.post(`/api/chats/${currentChatId}/messages`, {
+        saturs: text,
+        latitude:  userLocation?.lat  || null,
+        longitude: userLocation?.lng  || null,
+        address:   userAddress        || null,
+      });
+    }
     showTyping(false);
     for (const msg of msgs) {
-      appendMessage(msg.saturs, msg.zinaojuma_tips, msg.nosutisanas_laiks);
+      appendMessage(msg.saturs, msg.zinaojuma_tips, msg.nosutisanas_laiks, msg.image_url);
     }
   } catch (e) {
     showTyping(false);
@@ -92,17 +95,53 @@ async function sendMessage() {
   toggleSendBtn(true);
 }
 
-function appendMessage(text, type, time) {
+async function sendImageToAPI(chatId, file, text, localPreviewUrl) {
+  const formData = new FormData();
+  formData.append('image', file);
+  if (text) formData.append('text', text);
+  if (userLocation?.lat) formData.append('latitude', userLocation.lat);
+  if (userLocation?.lng) formData.append('longitude', userLocation.lng);
+
+  const res = await fetch(`/api/chats/${chatId}/messages/image`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${api.token()}` },
+    body: formData,
+  });
+
+  if (res.status === 401) { api.logout(); return; }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
+
+  // Replace server URL with local preview so image shows immediately
+  if (data[0]) data[0].image_url = localPreviewUrl;
+  return data;
+}
+
+function appendMessage(text, type, time, imageUrl) {
   const container = document.getElementById('chat-messages');
-  const empty = container.querySelector('.chat-empty');
-  if (empty) empty.remove();
+  container.querySelector('.chat-empty')?.remove();
 
   const div = document.createElement('div');
   div.className = `message ${type}`;
 
-  const content = document.createElement('div');
-  content.textContent = text;
-  div.appendChild(content);
+  if (imageUrl) {
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.style.cssText = 'max-width:100%;max-height:220px;border-radius:8px;display:block;margin-bottom:6px;cursor:pointer;';
+    img.onclick = () => window.open(imageUrl, '_blank');
+    div.appendChild(img);
+  }
+
+  if (text) {
+    const content = document.createElement('div');
+    if (type === 'ai' && window.marked) {
+      content.className = 'md';
+      content.innerHTML = marked.parse(text);
+    } else {
+      content.textContent = text;
+    }
+    div.appendChild(content);
+  }
 
   const timeEl = document.createElement('div');
   timeEl.className = 'message-time';
@@ -111,6 +150,31 @@ function appendMessage(text, type, time) {
 
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
+}
+
+function showImagePreview(url) {
+  let preview = document.getElementById('image-preview-bar');
+  if (!preview) {
+    preview = document.createElement('div');
+    preview.id = 'image-preview-bar';
+    preview.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 0 4px;';
+    document.querySelector('.chat-input-area').insertBefore(
+      preview,
+      document.querySelector('.chat-input-row')
+    );
+  }
+  preview.innerHTML = `
+    <div style="position:relative;display:inline-block;">
+      <img src="${url}" style="height:60px;border-radius:8px;display:block;">
+      <button onclick="clearImagePreview()" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#ef4444;border:none;color:white;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>
+    </div>
+    <span style="font-size:12px;color:var(--text-muted);">Image ready to send</span>
+  `;
+}
+
+function clearImagePreview() {
+  document.getElementById('image-preview-bar')?.remove();
+  pendingImage = null;
 }
 
 function showTyping(visible) {
@@ -130,6 +194,7 @@ function showTyping(visible) {
 
 function clearMessages() {
   document.getElementById('chat-messages').innerHTML = '';
+  clearImagePreview();
 }
 
 function showEmptyState(show) {
@@ -155,43 +220,106 @@ function toggleSendBtn(enabled) {
 async function askAboutObject(obj) {
   if (!api.isLoggedIn()) { window.location.href = '/login.html'; return; }
   if (!currentChatId) await startNewChat();
-
-  const textarea = document.getElementById('chat-input');
-  textarea.value = `${t('btn_ask_ai').replace('💬 ', '')}: "${obj.nosaukums}". ${obj.iss_apraksts || ''}`.trim();
+  document.getElementById('chat-input').value =
+    `${t('btn_ask_ai').replace('💬 ', '')}: "${obj.nosaukums}". ${obj.iss_apraksts || ''}`.trim();
   sendMessage();
 }
 
+// ── Voice input (OpenAI Whisper via MediaRecorder) ───────────────────────────
+
 function initVoiceInput() {
-  const voiceBtn = document.getElementById('voice-btn');
+  const voiceWrap = document.getElementById('voice-wrap');
+  const voiceBtn  = document.getElementById('voice-btn');
+  const langSel   = document.getElementById('voice-lang');
   if (!voiceBtn) return;
 
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) { voiceBtn.style.display = 'none'; return; }
+  // Hide language selector — Whisper detects language automatically
+  if (langSel) langSel.style.display = 'none';
 
-  const recognition = new SpeechRecognition();
-  recognition.continuous = false;
-  recognition.interimResults = false;
-  recognition.lang = getLang() === 'lv' ? 'lv-LV' : 'en-US';
+  if (!navigator.mediaDevices?.getUserMedia) return; // browser doesn't support mic
 
+  if (voiceWrap) voiceWrap.style.display = 'flex';
+
+  let mediaRecorder = null;
+  let chunks = [];
   let recording = false;
 
-  voiceBtn.addEventListener('click', () => {
-    recognition.lang = getLang() === 'lv' ? 'lv-LV' : 'en-US';
-    recording ? recognition.stop() : recognition.start();
+  voiceBtn.addEventListener('click', async () => {
+    // Stop recording on second tap
+    if (recording) {
+      mediaRecorder?.stop();
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      chunks = [];
+
+      mediaRecorder = new MediaRecorder(stream);
+
+      mediaRecorder.ondataavailable = e => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        // Stop all mic tracks to release microphone indicator
+        stream.getTracks().forEach(t => t.stop());
+        recording = false;
+        voiceBtn.classList.remove('recording');
+
+        const mimeType = mediaRecorder.mimeType || 'audio/webm';
+        const blob = new Blob(chunks, { type: mimeType });
+        await transcribeWithWhisper(blob, mimeType);
+      };
+
+      mediaRecorder.start();
+      recording = true;
+      voiceBtn.classList.add('recording');
+
+    } catch (err) {
+      alert('Microphone access denied. Please allow microphone in browser settings.');
+    }
   });
+}
 
-  recognition.onstart = () => {
-    recording = true;
-    voiceBtn.classList.add('recording');
-  };
+async function transcribeWithWhisper(blob, mimeType) {
+  const voiceBtn = document.getElementById('voice-btn');
 
-  recognition.onend = () => {
-    recording = false;
-    voiceBtn.classList.remove('recording');
-  };
+  // Show loading state
+  const origText = voiceBtn.textContent;
+  voiceBtn.textContent = '⏳';
+  voiceBtn.disabled = true;
 
-  recognition.onresult = e => {
-    document.getElementById('chat-input').value = e.results[0][0].transcript;
-    sendMessage();
-  };
+  try {
+    // Determine file extension from MIME type
+    let ext = 'webm';
+    if (mimeType.includes('ogg'))  ext = 'ogg';
+    if (mimeType.includes('mp4') || mimeType.includes('m4a')) ext = 'mp4';
+    if (mimeType.includes('wav'))  ext = 'wav';
+
+    const formData = new FormData();
+    formData.append('audio', blob, `voice.${ext}`);
+
+    const res = await fetch('/api/transcribe', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${api.token()}` },
+      body: formData,
+    });
+
+    if (res.status === 401) { api.logout(); return; }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
+
+    const text = data.text?.trim();
+    if (text) {
+      document.getElementById('chat-input').value = text;
+      sendMessage();
+    }
+  } catch (err) {
+    console.error('Whisper transcription error:', err);
+    alert('Voice recognition error: ' + err.message);
+  } finally {
+    voiceBtn.textContent = origText;
+    voiceBtn.disabled = false;
+  }
 }

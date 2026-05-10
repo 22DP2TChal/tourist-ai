@@ -47,6 +47,8 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+  <script>marked.use({ breaks: true, gfm: true });</script>
   <script src="/static/js/i18n.js?v=2"></script>
   <script src="/static/js/api.js?v=2"></script>
   <script>
@@ -109,7 +111,10 @@
         } else {
           container.innerHTML = chat.zinojumi.map(m => `
             <div class="message ${m.zinaojuma_tips}" style="max-width:88%;">
-              <div class="message-content">${escapeHtml(m.saturs)}</div>
+              ${m.image_url ? `<img src="${m.image_url}" style="max-width:100%;max-height:220px;border-radius:8px;display:block;margin-bottom:6px;cursor:pointer;" onclick="window.open('${m.image_url}','_blank')">` : ''}
+              ${m.zinaojuma_tips === 'ai' && window.marked
+                ? `<div class="message-content md">${marked.parse(m.saturs)}</div>`
+                : `<div class="message-content">${escapeHtml(m.saturs)}</div>`}
               <div class="message-time">${formatDate(m.nosutisanas_laiks)}</div>
             </div>
           `).join('');
@@ -135,7 +140,13 @@
         for (const m of msgs) {
           const div = document.createElement('div');
           div.className = `message ${m.zinaojuma_tips}`;
-          div.innerHTML = `<div class="message-content">${escapeHtml(m.saturs)}</div><div class="message-time">${formatDate(m.nosutisanas_laiks)}</div>`;
+          const bodyHtml = m.zinaojuma_tips === 'ai' && window.marked
+            ? `<div class="message-content md">${marked.parse(m.saturs)}</div>`
+            : `<div class="message-content">${escapeHtml(m.saturs)}</div>`;
+          div.innerHTML = `
+            ${m.image_url ? `<img src="${m.image_url}" style="max-width:100%;max-height:220px;border-radius:8px;display:block;margin-bottom:6px;cursor:pointer;" onclick="window.open('${m.image_url}','_blank')">` : ''}
+            ${bodyHtml}
+            <div class="message-time">${formatDate(m.nosutisanas_laiks)}</div>`;
           container.appendChild(div);
         }
         container.scrollTop = container.scrollHeight;

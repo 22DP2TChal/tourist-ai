@@ -38,6 +38,7 @@ class Message(Base):
     saturs = Column(Text, nullable=False)
     nosutisanas_laiks = Column(DateTime, server_default=func.now())
     zinaojuma_tips = Column(String(20), default="user")  # "user" or "ai"
+    image_url = Column(String(255), nullable=True)
 
     chat = relationship("Chat", back_populates="zinojumi")
     user = relationship("User", back_populates="zinojumi")

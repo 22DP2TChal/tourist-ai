@@ -6,10 +6,19 @@ import os
 
 from .database import engine, Base
 from .models import User, Chat, Message, TouristObject
-from .routers import auth_router, chat_router, maps_router, admin_router
+from .routers import auth_router, chat_router, maps_router, admin_router, voice_router
 from .config import settings
 
 Base.metadata.create_all(bind=engine)
+
+# Add image_url column if upgrading from older version
+from sqlalchemy import text
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE messages ADD COLUMN image_url VARCHAR(255)"))
+        conn.commit()
+except Exception:
+    pass  # column already exists
 
 app = FastAPI(title="AI Tourist API", version="1.0.0")
 
@@ -25,6 +34,7 @@ app.include_router(auth_router.router)
 app.include_router(chat_router.router)
 app.include_router(maps_router.router)
 app.include_router(admin_router.router)
+app.include_router(voice_router.router)
 
 
 @app.get("/api/config")
@@ -61,6 +71,11 @@ def seed_data():
     finally:
         db.close()
 
+
+# Serve uploaded images
+uploads_path = os.path.join(os.path.dirname(__file__), "..", "uploads")
+os.makedirs(uploads_path, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
 
 # Serve frontend static files
 frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend")
