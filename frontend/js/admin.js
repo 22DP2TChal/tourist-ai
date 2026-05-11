@@ -7,6 +7,8 @@ async function initAdmin() {
   await loadUsers();
   await loadObjects();
   initObjectForm();
+  await loadCountries();
+  initCountryForm();
 }
 
 async function loadStats() {
@@ -155,6 +157,138 @@ async function deleteObject(id, name) {
   try {
     await api.delete(`/api/objects/${id}`);
     await loadObjects();
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+// ── Countries ─────────────────────────────────────────────────────────────────
+
+let _countryEditId = null;
+
+async function loadCountries() {
+  const tbody = document.getElementById('countries-tbody');
+  if (!tbody) return;
+  try {
+    const countries = await api.get('/api/countries');
+    if (!countries.length) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">No countries yet</td></tr>';
+      return;
+    }
+    tbody.innerHTML = countries.map(c => `
+      <tr>
+        <td><code style="background:var(--bg-card);padding:2px 7px;border-radius:5px;font-size:12px;">${c.code}</code></td>
+        <td><strong>${c.name}</strong></td>
+        <td style="max-width:320px;color:var(--text-muted);font-size:13px;">
+          ${c.description ? c.description.slice(0, 120) + (c.description.length > 120 ? '…' : '') : '<em>No description yet</em>'}
+        </td>
+        <td>
+          <div class="actions">
+            <button class="btn btn-ghost btn-sm" onclick="editCountry(${c.id})">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteCountry(${c.id}, '${c.name.replace(/'/g, "\\'")}')">Delete</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="4" style="color:var(--danger);padding:16px;">${e.message}</td></tr>`;
+  }
+}
+
+function initCountryForm() {
+  const form = document.getElementById('country-form');
+  if (!form) return;
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const data = {
+      name:        form.name.value.trim(),
+      code:        form.code.value.trim().toLowerCase(),
+      prompt:      form.prompt.value.trim(),
+      description: form.description.value.trim(),
+    };
+    try {
+      if (_countryEditId) {
+        await api.put(`/api/countries/${_countryEditId}`, data);
+      } else {
+        await api.post('/api/countries', data);
+      }
+      cancelCountryEdit();
+      await loadCountries();
+    } catch (e) {
+      alert('Error: ' + e.message);
+    }
+  });
+}
+
+async function editCountry(id) {
+  try {
+    const countries = await api.get('/api/countries');
+    const c = countries.find(x => x.id === id);
+    if (!c) return;
+    _countryEditId = id;
+    const form = document.getElementById('country-form');
+    form.name.value        = c.name;
+    form.code.value        = c.code;
+    form.prompt.value      = c.prompt || '';
+    form.description.value = c.description || '';
+    document.getElementById('country-form-title').textContent = `Edit — ${c.name}`;
+    document.getElementById('country-submit-btn').textContent = 'Save Changes';
+    form.scrollIntoView({ behavior: 'smooth' });
+  } catch (e) { alert(e.message); }
+}
+
+function cancelCountryEdit() {
+  _countryEditId = null;
+  document.getElementById('country-form').reset();
+  document.getElementById('country-form-title').textContent = 'Add Country';
+  document.getElementById('country-submit-btn').textContent = 'Save';
+  document.getElementById('country-gen-status').textContent = '';
+}
+
+async function generateCountryDescription() {
+  const form   = document.getElementById('country-form');
+  const status = document.getElementById('country-gen-status');
+  const btn    = document.getElementById('country-generate-btn');
+
+  // Need to save first if new entry
+  if (!_countryEditId) {
+    const data = {
+      name:        form.name.value.trim(),
+      code:        form.code.value.trim().toLowerCase(),
+      prompt:      form.prompt.value.trim(),
+      description: form.description.value.trim(),
+    };
+    if (!data.name || !data.code) { alert('Fill in name and code first'); return; }
+    try {
+      const created = await api.post('/api/countries', data);
+      _countryEditId = created.id;
+      document.getElementById('country-form-title').textContent = `Edit — ${created.name}`;
+      document.getElementById('country-submit-btn').textContent = 'Save Changes';
+    } catch (e) { alert('Error saving: ' + e.message); return; }
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating…';
+  status.textContent = '';
+
+  try {
+    const result = await api.post(`/api/countries/${_countryEditId}/generate`, {});
+    form.description.value = result.description;
+    status.textContent = '✅ Generated!';
+    await loadCountries();
+  } catch (e) {
+    status.textContent = '⚠️ ' + e.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✨ Generate with AI';
+  }
+}
+
+async function deleteCountry(id, name) {
+  if (!confirm(`Delete "${name}"?`)) return;
+  try {
+    await api.delete(`/api/countries/${id}`);
+    await loadCountries();
   } catch (e) {
     alert('Error: ' + e.message);
   }

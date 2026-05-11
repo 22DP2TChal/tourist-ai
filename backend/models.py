@@ -44,6 +44,17 @@ class Message(Base):
     user = relationship("User", back_populates="zinojumi")
 
 
+class Country(Base):
+    __tablename__ = "countries"
+
+    id          = Column(Integer, primary_key=True, index=True)
+    name        = Column(String(150), nullable=False)
+    code        = Column(String(10),  unique=True, index=True, nullable=False)  # ISO 3166-1 alpha-2, e.g. "lv"
+    prompt      = Column(Text, default="")       # admin-written prompt for AI generation
+    description = Column(Text, default="")       # AI-generated country description shown to users
+    created_at  = Column(DateTime, server_default=func.now())
+
+
 class TouristObject(Base):
     __tablename__ = "objects"
 

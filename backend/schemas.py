@@ -86,6 +86,24 @@ class ObjectResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class CountryCreate(BaseModel):
+    name:        str
+    code:        str
+    prompt:      str = ""
+    description: str = ""
+
+
+class CountryResponse(BaseModel):
+    id:          int
+    name:        str
+    code:        str
+    prompt:      str = ""
+    description: str = ""
+    created_at:  datetime
+
+    model_config = {"from_attributes": True}
+
+
 class AdminStats(BaseModel):
     total_users: int
     total_chats: int
