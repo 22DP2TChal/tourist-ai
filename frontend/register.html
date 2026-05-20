@@ -40,16 +40,6 @@
           <label for="parole" data-i18n="label_password_hint"></label>
           <input type="password" id="parole" placeholder="••••••••" required minlength="8" autocomplete="new-password">
         </div>
-        <div class="form-group">
-          <label for="valoda" data-i18n="label_language"></label>
-          <select id="valoda">
-            <option value="en">English</option>
-            <option value="lv">Latviešu</option>
-            <option value="ru">Русский</option>
-            <option value="de">Deutsch</option>
-            <option value="fr">Français</option>
-          </select>
-        </div>
         <button type="submit" class="btn btn-primary" id="submit-btn" data-i18n="btn_create"></button>
       </form>
 
@@ -68,14 +58,6 @@
     applyTranslations();
     updateLangSwitcher();
 
-    // Sync language selector with chosen app language
-    const valodaSelect = document.getElementById('valoda');
-    valodaSelect.value = getLang() === 'lv' ? 'lv' : 'en';
-    valodaSelect.addEventListener('change', () => {
-      const lang = valodaSelect.value === 'lv' ? 'lv' : 'en';
-      if (['en', 'lv'].includes(valodaSelect.value)) setLang(valodaSelect.value);
-    });
-
     document.getElementById('register-form').addEventListener('submit', async e => {
       e.preventDefault();
       const btn     = document.getElementById('submit-btn');
@@ -88,7 +70,7 @@
         await api.post('/api/auth/register', {
           epasts: document.getElementById('epasts').value,
           parole: document.getElementById('parole').value,
-          valoda: valodaSelect.value,
+          valoda: getLang(),
         });
         showAlert(alertEl, t('register_success'), 'success');
         await api.login(

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, func
+from sqlalchemy import Column, Integer, String, Text, DateTime, Float, ForeignKey, func
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -65,3 +65,13 @@ class TouristObject(Base):
     latitude = Column(String(30))
     longitude = Column(String(30))
     kategorija = Column(String(50), default="attraction")
+
+
+class AppSettings(Base):
+    __tablename__ = "app_settings"
+    id               = Column(Integer, primary_key=True)
+    default_category = Column(String(50), default="sights")   # POI category: food/sights/shopping/hotels/""
+    default_city     = Column(String(150), default="Riga, Latvia")
+    default_lat      = Column(Float, default=56.953218)
+    default_lng      = Column(Float, default=24.104180)
+    updated_at       = Column(DateTime, server_default=func.now(), onupdate=func.now())

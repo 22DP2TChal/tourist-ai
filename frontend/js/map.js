@@ -54,7 +54,7 @@ async function initMap() {
 
   window.onGoogleMapsLoaded = function () {
     map = window.map = new google.maps.Map(document.getElementById('map'), {
-      center: { lat: 56.946, lng: 24.106 },
+      center: { lat: 56.953218, lng: 24.104180 },
       zoom: 14,
       styles: darkMapStyle(),
       disableDefaultUI: false,
@@ -237,29 +237,29 @@ async function filterPOI(btn, category) {
 // ── Sub-bar (food types / distance) ──────────────────────────────────────────
 
 const SUB_BARS = {
-  food: `
-    <button class="poi-sub-btn active" data-sub="all"        onclick="setSub(this,'all')">🍽️ All</button>
-    <button class="poi-sub-btn"        data-sub="restaurant" onclick="setSub(this,'restaurant')">🍜 Restaurants</button>
-    <button class="poi-sub-btn"        data-sub="cafe"       onclick="setSub(this,'cafe')">☕ Cafes</button>
-    <button class="poi-sub-btn"        data-sub="bar"        onclick="setSub(this,'bar')">🍺 Bars & Pubs</button>
-    <button class="poi-sub-btn"        data-sub="fastfood"   onclick="setSub(this,'fastfood')">🍔 Fast Food</button>
-  `,
-  shopping: `
-    <button class="poi-sub-btn active" data-sub="all"         onclick="setSub(this,'all')">🛍️ All</button>
-    <button class="poi-sub-btn"        data-sub="mall"        onclick="setSub(this,'mall')">🏬 Malls</button>
-    <button class="poi-sub-btn"        data-sub="grocery"     onclick="setSub(this,'grocery')">🛒 Supermarkets</button>
-    <button class="poi-sub-btn"        data-sub="fashion"     onclick="setSub(this,'fashion')">👗 Fashion</button>
-    <button class="poi-sub-btn"        data-sub="electronics" onclick="setSub(this,'electronics')">📱 Electronics</button>
-    <button class="poi-sub-btn"        data-sub="home"        onclick="setSub(this,'home')">🏠 Home</button>
-  `,
+  get food() { return `
+    <button class="poi-sub-btn active" data-sub="all"        onclick="setSub(this,'all')">${t('sub_all')}</button>
+    <button class="poi-sub-btn"        data-sub="restaurant" onclick="setSub(this,'restaurant')">${t('sub_restaurants')}</button>
+    <button class="poi-sub-btn"        data-sub="cafe"       onclick="setSub(this,'cafe')">${t('sub_cafes')}</button>
+    <button class="poi-sub-btn"        data-sub="bar"        onclick="setSub(this,'bar')">${t('sub_bars')}</button>
+    <button class="poi-sub-btn"        data-sub="fastfood"   onclick="setSub(this,'fastfood')">${t('sub_fastfood')}</button>
+  `; },
+  get shopping() { return `
+    <button class="poi-sub-btn active" data-sub="all"         onclick="setSub(this,'all')">${t('sub_shop_all')}</button>
+    <button class="poi-sub-btn"        data-sub="mall"        onclick="setSub(this,'mall')">${t('sub_mall')}</button>
+    <button class="poi-sub-btn"        data-sub="grocery"     onclick="setSub(this,'grocery')">${t('sub_grocery')}</button>
+    <button class="poi-sub-btn"        data-sub="fashion"     onclick="setSub(this,'fashion')">${t('sub_fashion')}</button>
+    <button class="poi-sub-btn"        data-sub="electronics" onclick="setSub(this,'electronics')">${t('sub_electronics')}</button>
+    <button class="poi-sub-btn"        data-sub="home"        onclick="setSub(this,'home')">${t('sub_home')}</button>
+  `; },
 };
 
-const DISTANCE_BAR = `
-  <span class="poi-sub-label">📏 Radius:</span>
-  <button class="poi-sub-btn active" data-r="1000" onclick="setRadius(this,1000)">1 km</button>
-  <button class="poi-sub-btn"        data-r="2000" onclick="setRadius(this,2000)">2 km</button>
-  <button class="poi-sub-btn"        data-r="5000" onclick="setRadius(this,5000)">5 km</button>
-`;
+function getDistanceBar() { return `
+  <span class="poi-sub-label">${t('sub_radius')}</span>
+  <button class="poi-sub-btn active" data-r="1000" onclick="setRadius(this,1000)">${t('sub_1km')}</button>
+  <button class="poi-sub-btn"        data-r="2000" onclick="setRadius(this,2000)">${t('sub_2km')}</button>
+  <button class="poi-sub-btn"        data-r="5000" onclick="setRadius(this,5000)">${t('sub_5km')}</button>
+`; }
 
 function showSubBar(category) {
   const bar = document.getElementById('poi-sub-bar');
@@ -270,7 +270,7 @@ function showSubBar(category) {
     bar.innerHTML = SUB_BARS[def.hasSubs] || '';
     bar.style.display = 'flex';
   } else if (def?.hasDistance) {
-    bar.innerHTML = DISTANCE_BAR;
+    bar.innerHTML = getDistanceBar();
     bar.style.display = 'flex';
   } else {
     hideSubBar();
@@ -557,7 +557,7 @@ async function maybeShowCountryBanner(countryCode) {
 
 function trackLocationOnly() {
   if (!navigator.geolocation) {
-    updateLocationBar(null, null);
+    applySettingsFallback();
     return;
   }
 
@@ -575,9 +575,28 @@ function trackLocationOnly() {
     }
   };
 
+  const onErr = async () => {
+    try {
+      const s = await api.get('/api/settings');
+      const loc = { lat: s.default_lat, lng: s.default_lng };
+      userLocation = window.userLocation = loc;
+      updateLocationBar(loc.lat, loc.lng);
+      if (map) {
+        map.setCenter(loc);
+        if (s.default_category) {
+          const btn = document.querySelector(`.poi-filter-btn[data-cat="${s.default_category}"]`);
+          if (btn) filterPOI(btn, s.default_category);
+        }
+        loadObjectMarkers(loc.lat, loc.lng);
+      }
+    } catch(_) {
+      updateLocationBar(null, null);
+    }
+  };
+
   navigator.geolocation.getCurrentPosition(
     onPos,
-    () => updateLocationBar(null, null),
+    onErr,
     { enableHighAccuracy: true, timeout: 10000 }
   );
 
@@ -586,6 +605,25 @@ function trackLocationOnly() {
     maximumAge: 5000,
     timeout: 10000,
   });
+}
+
+async function applySettingsFallback() {
+  try {
+    const s = await api.get('/api/settings');
+    const loc = { lat: s.default_lat, lng: s.default_lng };
+    userLocation = window.userLocation = loc;
+    updateLocationBar(loc.lat, loc.lng);
+    if (map) {
+      map.setCenter(loc);
+      if (s.default_category) {
+        const btn = document.querySelector(`.poi-filter-btn[data-cat="${s.default_category}"]`);
+        if (btn) filterPOI(btn, s.default_category);
+      }
+      loadObjectMarkers(loc.lat, loc.lng);
+    }
+  } catch(_) {
+    updateLocationBar(null, null);
+  }
 }
 
 async function loadObjectsOnList() {

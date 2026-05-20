@@ -49,11 +49,11 @@
 
       <!-- POI category filter bar -->
       <div class="poi-filter-bar" id="poi-filter-bar">
-        <button class="poi-filter-btn active" data-cat="" onclick="filterPOI(this,'')">🗺️ All</button>
-        <button class="poi-filter-btn" data-cat="food"          onclick="filterPOI(this,'food')">🍽️ Food</button>
-        <button class="poi-filter-btn" data-cat="sights"        onclick="filterPOI(this,'sights')">🏛️ Sights</button>
-        <button class="poi-filter-btn" data-cat="shopping"      onclick="filterPOI(this,'shopping')">🛍️ Shopping</button>
-        <button class="poi-filter-btn" data-cat="hotels"   onclick="filterPOI(this,'hotels')">🏨 Hotels</button>
+        <button class="poi-filter-btn active" data-cat="" onclick="filterPOI(this,'')" data-i18n="poi_all">🗺️ All</button>
+        <button class="poi-filter-btn" data-cat="food"          onclick="filterPOI(this,'food')" data-i18n="poi_food">🍽️ Food</button>
+        <button class="poi-filter-btn" data-cat="sights"        onclick="filterPOI(this,'sights')" data-i18n="poi_sights">🏛️ Sights</button>
+        <button class="poi-filter-btn" data-cat="shopping"      onclick="filterPOI(this,'shopping')" data-i18n="poi_shopping">🛍️ Shopping</button>
+        <button class="poi-filter-btn" data-cat="hotels"   onclick="filterPOI(this,'hotels')" data-i18n="poi_hotels">🏨 Hotels</button>
       </div>
 
       <!-- POI sub-filter bar (food types / distance) — shown contextually -->
@@ -100,7 +100,7 @@
 
       <div class="chat-tabs">
         <div class="chat-tab active" id="tab-chat"   onclick="switchTab('chat')"   data-i18n="tab_chat"></div>
-        <div class="chat-tab"        id="tab-myday"  onclick="switchTab('myday')">✨ My Day</div>
+        <div class="chat-tab"        id="tab-myday"  onclick="switchTab('myday')" data-i18n="dp_title">✨ My Day</div>
         <div class="chat-tab"        id="tab-live"   onclick="switchTab('live')"   data-i18n="tab_live"></div>
       </div>
 
@@ -147,52 +147,52 @@
         <div id="dp-form-view">
           <div class="dp-tab-header">
             <span class="dp-header-icon">✨</span>
-            <h3>Plan My Day</h3>
+            <h3 data-i18n="dp_title">Plan My Day</h3>
           </div>
           <div class="dp-body">
             <div class="dp-section">
-              <div class="dp-label">📍 Where would you like to go?</div>
+              <div class="dp-label" data-i18n="dp_where">📍 Where would you like to go?</div>
               <div class="dp-pills" id="dp-places">
-                <div class="dp-pill active" data-val="Museums"    onclick="toggleDpPill(this)">🏛️ Museums</div>
-                <div class="dp-pill"        data-val="Parks"      onclick="toggleDpPill(this)">🌳 Parks</div>
-                <div class="dp-pill active" data-val="Landmarks"  onclick="toggleDpPill(this)">⭐ Landmarks</div>
-                <div class="dp-pill"        data-val="Art"        onclick="toggleDpPill(this)">🎨 Art</div>
-                <div class="dp-pill"        data-val="Historical" onclick="toggleDpPill(this)">🏰 Historical</div>
-                <div class="dp-pill"        data-val="Viewpoints" onclick="toggleDpPill(this)">🌆 Viewpoints</div>
+                <div class="dp-pill active" data-val="Museums"    onclick="toggleDpPill(this)" data-i18n="dp_museums">🏛️ Museums</div>
+                <div class="dp-pill"        data-val="Parks"      onclick="toggleDpPill(this)" data-i18n="dp_parks">🌳 Parks</div>
+                <div class="dp-pill active" data-val="Landmarks"  onclick="toggleDpPill(this)" data-i18n="dp_landmarks">⭐ Landmarks</div>
+                <div class="dp-pill"        data-val="Art"        onclick="toggleDpPill(this)" data-i18n="dp_art">🎨 Art</div>
+                <div class="dp-pill"        data-val="Historical" onclick="toggleDpPill(this)" data-i18n="dp_historical">🏰 Historical</div>
+                <div class="dp-pill"        data-val="Viewpoints" onclick="toggleDpPill(this)" data-i18n="dp_viewpoints">🌆 Viewpoints</div>
               </div>
             </div>
 
             <div class="dp-section">
-              <div class="dp-label">⏱️ Available time — <strong id="dp-hours-label">4 hours</strong></div>
+              <div class="dp-label"><span data-i18n="dp_time">⏱️ Available time —</span> <strong id="dp-hours-label">4</strong> <span data-i18n="dp_hours_suffix">hours</span></div>
               <div class="dp-slider-wrap">
                 <span style="font-size:12px;color:var(--text-muted)">1h</span>
                 <input class="dp-slider" type="range" id="dp-hours" min="1" max="12" value="4"
-                       oninput="document.getElementById('dp-hours-label').textContent = this.value + (this.value==1?' hour':' hours'); document.getElementById('dp-slider-display').textContent = this.value + 'h'">
+                       oninput="document.getElementById('dp-hours-label').textContent = this.value; document.getElementById('dp-slider-display').textContent = this.value + 'h'">
                 <span class="dp-slider-val" id="dp-slider-display">4h</span>
               </div>
             </div>
 
             <div class="dp-section">
-              <div class="dp-label">🍽️ Food preference</div>
+              <div class="dp-label" data-i18n="dp_food">🍽️ Food preference</div>
               <div class="dp-pills" id="dp-food">
-                <div class="dp-pill active" data-val="No preference" onclick="selectDpPill(this,'dp-food')">🌍 Any</div>
-                <div class="dp-pill" data-val="Local"    onclick="selectDpPill(this,'dp-food')">🥘 Local</div>
-                <div class="dp-pill" data-val="Asian"    onclick="selectDpPill(this,'dp-food')">🍜 Asian</div>
-                <div class="dp-pill" data-val="European" onclick="selectDpPill(this,'dp-food')">🍕 European</div>
-                <div class="dp-pill" data-val="Indian"   onclick="selectDpPill(this,'dp-food')">🍛 Indian</div>
+                <div class="dp-pill active" data-val="No preference" onclick="selectDpPill(this,'dp-food')" data-i18n="dp_food_any">🌍 Any</div>
+                <div class="dp-pill" data-val="Local"    onclick="selectDpPill(this,'dp-food')" data-i18n="dp_food_local">🥘 Local</div>
+                <div class="dp-pill" data-val="Asian"    onclick="selectDpPill(this,'dp-food')" data-i18n="dp_food_asian">🍜 Asian</div>
+                <div class="dp-pill" data-val="European" onclick="selectDpPill(this,'dp-food')" data-i18n="dp_food_european">🍕 European</div>
+                <div class="dp-pill" data-val="Indian"   onclick="selectDpPill(this,'dp-food')" data-i18n="dp_food_indian">🍛 Indian</div>
               </div>
             </div>
 
             <div class="dp-section">
-              <div class="dp-label">🛍️ Add a shopping stop?</div>
+              <div class="dp-label" data-i18n="dp_shopping">🛍️ Add a shopping stop?</div>
               <div class="dp-pills" id="dp-shopping">
-                <div class="dp-pill active" data-val="No"  onclick="selectDpPill(this,'dp-shopping')">No thanks</div>
-                <div class="dp-pill"        data-val="Yes" onclick="selectDpPill(this,'dp-shopping')">Yes please!</div>
+                <div class="dp-pill active" data-val="No"  onclick="selectDpPill(this,'dp-shopping')" data-i18n="dp_shop_no">No thanks</div>
+                <div class="dp-pill"        data-val="Yes" onclick="selectDpPill(this,'dp-shopping')" data-i18n="dp_shop_yes">Yes please!</div>
               </div>
             </div>
 
             <div class="dp-section">
-              <div class="dp-label">📏 Travel radius</div>
+              <div class="dp-label" data-i18n="dp_radius">📏 Travel radius</div>
               <div class="dp-pills" id="dp-radius">
                 <div class="dp-pill active" data-val="1" onclick="selectDpPill(this,'dp-radius')">1 km</div>
                 <div class="dp-pill"        data-val="2" onclick="selectDpPill(this,'dp-radius')">2 km</div>
@@ -201,14 +201,14 @@
             </div>
 
             <div class="dp-section">
-              <div class="dp-label">🔄 Return back to starting point?</div>
+              <div class="dp-label" data-i18n="dp_return">🔄 Return back to starting point?</div>
               <div class="dp-pills" id="dp-return">
-                <div class="dp-pill active" data-val="No"  onclick="selectDpPill(this,'dp-return')">No thanks</div>
-                <div class="dp-pill"        data-val="Yes" onclick="selectDpPill(this,'dp-return')">Yes, loop back</div>
+                <div class="dp-pill active" data-val="No"  onclick="selectDpPill(this,'dp-return')" data-i18n="dp_return_no">No thanks</div>
+                <div class="dp-pill"        data-val="Yes" onclick="selectDpPill(this,'dp-return')" data-i18n="dp_return_yes">Yes, loop back</div>
               </div>
             </div>
 
-            <button class="dp-generate-btn" onclick="generateDayPlan()">✨ Generate My Day</button>
+            <button class="dp-generate-btn" onclick="generateDayPlan()" data-i18n="dp_generate">✨ Generate My Day</button>
           </div>
         </div>
 

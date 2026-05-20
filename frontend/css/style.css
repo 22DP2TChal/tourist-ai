@@ -1776,6 +1776,8 @@ body {
 
   .mbn-btn {
     flex: 1;
+    min-width: 0;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1785,15 +1787,15 @@ body {
     border: none;
     cursor: pointer;
     color: var(--text-muted);
-    padding: 8px 0;
+    padding: 8px 2px;
     border-radius: 12px;
     transition: color 0.15s, background 0.15s;
     -webkit-tap-highlight-color: transparent;
   }
   .mbn-btn.active      { color: var(--accent); }
   .mbn-btn:active      { background: var(--bg-card); }
-  .mbn-icon  { font-size: 20px; line-height: 1; }
-  .mbn-label { font-size: 10px; font-weight: 600; letter-spacing: 0.2px; margin-top: 1px; }
+  .mbn-icon  { font-size: 20px; line-height: 1; flex-shrink: 0; }
+  .mbn-label { font-size: 10px; font-weight: 600; letter-spacing: 0.2px; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 
   /* ── Navbar: hide links, show only brand + sign out ── */
   .navbar {

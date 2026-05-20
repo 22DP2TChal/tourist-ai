@@ -7,10 +7,10 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 import os
 
 from .database import engine, Base
-from .models import User, Chat, Message, TouristObject
+from .models import User, Chat, Message, TouristObject, AppSettings
 from .routers import auth_router, chat_router, maps_router, admin_router, voice_router, planner_router
 from .routers.maps_router import places_router
-from .routers import countries_router
+from .routers import countries_router, settings_router
 from .config import settings
 
 Base.metadata.create_all(bind=engine)
@@ -57,6 +57,7 @@ app.include_router(admin_router.router)
 app.include_router(voice_router.router)
 app.include_router(countries_router.router)
 app.include_router(planner_router.router)
+app.include_router(settings_router.router)
 
 
 @app.get("/api/config")

@@ -15,10 +15,11 @@
   <div class="admin-layout">
     <!-- Sidebar -->
     <aside class="admin-sidebar">
-      <a href="#section-stats" class="active" onclick="showSection('stats',this)">📊 Statistics</a>
-      <a href="#section-users" onclick="showSection('users',this)">👥 Users</a>
-      <a href="#section-objects"   onclick="showSection('objects',this)">🏛️ Attractions</a>
-      <a href="#section-countries" onclick="showSection('countries',this)">🌍 Countries</a>
+      <a href="#section-stats" class="active" onclick="showSection('stats',this)" data-i18n="admin_nav_stats">📊 Statistics</a>
+      <a href="#section-users" onclick="showSection('users',this)" data-i18n="admin_nav_users">👥 Users</a>
+      <a href="#section-objects"   onclick="showSection('objects',this)" data-i18n="admin_nav_objects">🏛️ Attractions</a>
+      <a href="#section-countries" onclick="showSection('countries',this)" data-i18n="admin_nav_countries">🌍 Countries</a>
+      <a href="#section-settings" onclick="showSection('settings',this)" data-i18n="admin_nav_settings">⚙️ Settings</a>
     </aside>
 
     <!-- Main content -->
@@ -26,45 +27,45 @@
 
       <!-- Stats section -->
       <div id="section-stats">
-        <h2 class="section-title">📊 System Statistics</h2>
+        <h2 class="section-title" data-i18n="admin_stats_title">📊 System Statistics</h2>
         <div class="stats-grid">
           <div class="stat-card">
             <div class="stat-value" id="stat-users">—</div>
-            <div class="stat-label">Total users</div>
+            <div class="stat-label" data-i18n="admin_stat_users">Total users</div>
           </div>
           <div class="stat-card">
             <div class="stat-value" id="stat-chats">—</div>
-            <div class="stat-label">Total chats</div>
+            <div class="stat-label" data-i18n="admin_stat_chats">Total chats</div>
           </div>
           <div class="stat-card">
             <div class="stat-value" id="stat-messages">—</div>
-            <div class="stat-label">Total messages</div>
+            <div class="stat-label" data-i18n="admin_stat_msgs">Total messages</div>
           </div>
           <div class="stat-card">
             <div class="stat-value" id="stat-active">—</div>
-            <div class="stat-label">Active chats</div>
+            <div class="stat-label" data-i18n="admin_stat_active">Active chats</div>
           </div>
         </div>
       </div>
 
       <!-- Users section -->
       <div id="section-users" style="display:none;">
-        <h2 class="section-title">👥 Users</h2>
+        <h2 class="section-title" data-i18n="admin_users_title">👥 Users</h2>
         <div style="overflow-x:auto;">
           <table class="data-table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Email</th>
-                <th>Language</th>
-                <th>Registered</th>
-                <th>Chats</th>
-                <th>Role</th>
-                <th>Actions</th>
+                <th data-i18n="admin_th_id">ID</th>
+                <th data-i18n="admin_th_email">Email</th>
+                <th data-i18n="admin_th_lang">Language</th>
+                <th data-i18n="admin_th_registered">Registered</th>
+                <th data-i18n="admin_th_chats">Chats</th>
+                <th data-i18n="admin_th_role">Role</th>
+                <th data-i18n="admin_th_actions">Actions</th>
               </tr>
             </thead>
             <tbody id="users-tbody">
-              <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">Loading...</td></tr>
+              <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">Ielādē...</td></tr>
             </tbody>
           </table>
         </div>
@@ -72,53 +73,53 @@
 
       <!-- Attractions section -->
       <div id="section-objects" style="display:none;">
-        <h2 class="section-title">🏛️ Attractions</h2>
+        <h2 class="section-title" data-i18n="admin_objects_title">🏛️ Attractions</h2>
 
         <!-- Add/Edit form -->
         <div class="object-form">
-          <h3 id="form-title">Add New Attraction</h3>
+          <h3 id="form-title" data-i18n="admin_obj_add_title">Add new attraction</h3>
           <form id="object-form">
             <div class="form-row">
               <div class="form-group">
-                <label>Name</label>
-                <input type="text" name="nosaukums" placeholder="e.g. Freedom Monument" required>
+                <label data-i18n="admin_label_name">Name</label>
+                <input type="text" name="nosaukums" placeholder="piem. Brīvības piemineklis" required>
               </div>
               <div class="form-group">
-                <label>Category</label>
+                <label data-i18n="admin_label_category">Category</label>
                 <select name="kategorija">
-                  <option value="attraction">Attraction</option>
-                  <option value="monument">Monument</option>
-                  <option value="church">Church</option>
-                  <option value="historic">Historic site</option>
-                  <option value="castle">Castle</option>
-                  <option value="museum">Museum</option>
-                  <option value="street">Street</option>
-                  <option value="market">Market</option>
-                  <option value="theater">Theater</option>
+                  <option value="attraction" data-i18n="admin_cat_attraction">Attraction</option>
+                  <option value="monument"   data-i18n="admin_cat_monument">Monument</option>
+                  <option value="church"     data-i18n="admin_cat_church">Church</option>
+                  <option value="historic"   data-i18n="admin_cat_historic">Historic site</option>
+                  <option value="castle"     data-i18n="admin_cat_castle">Castle</option>
+                  <option value="museum"     data-i18n="admin_cat_museum">Museum</option>
+                  <option value="street"     data-i18n="admin_cat_street">Street</option>
+                  <option value="market"     data-i18n="admin_cat_market">Market</option>
+                  <option value="theater"    data-i18n="admin_cat_theater">Theatre</option>
                 </select>
               </div>
             </div>
             <div class="form-group">
-              <label>Description</label>
-              <input type="text" name="iss_apraksts" placeholder="Short description of the attraction">
+              <label data-i18n="admin_label_desc">Description</label>
+              <input type="text" name="iss_apraksts" placeholder="Īss apskates vietas apraksts">
             </div>
             <div class="form-group">
-              <label>Address / Location</label>
-              <input type="text" name="lokacijas_vieta" placeholder="e.g. Brīvības bulvāris, Rīga">
+              <label data-i18n="admin_label_address">Address / Location</label>
+              <input type="text" name="lokacijas_vieta" placeholder="piem. Brīvības bulvāris, Rīga">
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Latitude</label>
-                <input type="text" name="latitude" placeholder="e.g. 56.9513">
+                <label data-i18n="admin_label_lat">Latitude</label>
+                <input type="text" name="latitude" placeholder="piem. 56.9513">
               </div>
               <div class="form-group">
-                <label>Longitude</label>
-                <input type="text" name="longitude" placeholder="e.g. 24.1134">
+                <label data-i18n="admin_label_lng">Longitude</label>
+                <input type="text" name="longitude" placeholder="piem. 24.1134">
               </div>
             </div>
             <div style="display:flex;gap:10px;">
-              <button type="submit" class="btn btn-primary" id="submit-btn" style="width:auto;">Add Attraction</button>
-              <button type="button" class="btn btn-ghost" onclick="cancelEdit()">Cancel</button>
+              <button type="submit" class="btn btn-primary" id="submit-btn" style="width:auto;" data-i18n="admin_btn_add">Add</button>
+              <button type="button" class="btn btn-ghost" onclick="cancelEdit()" data-i18n="admin_btn_cancel">Cancel</button>
             </div>
           </form>
         </div>
@@ -128,17 +129,17 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Address</th>
-                <th>Coordinates</th>
-                <th>Category</th>
-                <th>Actions</th>
+                <th data-i18n="admin_th_id">ID</th>
+                <th data-i18n="admin_th_name">Name</th>
+                <th data-i18n="admin_th_desc">Description</th>
+                <th data-i18n="admin_th_address">Address</th>
+                <th data-i18n="admin_th_coords">Coordinates</th>
+                <th data-i18n="admin_label_category">Category</th>
+                <th data-i18n="admin_th_actions">Actions</th>
               </tr>
             </thead>
             <tbody id="objects-tbody">
-              <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">Loading...</td></tr>
+              <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">Ielādē...</td></tr>
             </tbody>
           </table>
         </div>
@@ -146,41 +147,41 @@
 
       <!-- Countries section -->
       <div id="section-countries" style="display:none;">
-        <h2 class="section-title">🌍 Countries</h2>
+        <h2 class="section-title" data-i18n="admin_countries_title">🌍 Countries</h2>
 
         <!-- Add / edit form -->
         <div class="object-form" id="country-form-wrap">
-          <h3 id="country-form-title">Add Country</h3>
+          <h3 id="country-form-title" data-i18n="admin_country_add_title">Add country</h3>
           <form id="country-form">
             <div class="form-row">
               <div class="form-group">
-                <label>Country name</label>
-                <input type="text" name="name" placeholder="e.g. Latvia" required>
+                <label data-i18n="admin_label_country_name">Country name</label>
+                <input type="text" name="name" placeholder="piem. Latvija" required>
               </div>
               <div class="form-group">
-                <label>ISO code <span style="font-size:11px;color:var(--text-muted);">(2 letters, e.g. lv)</span></label>
+                <label data-i18n="admin_label_iso">ISO code <span style="font-size:11px;color:var(--text-muted);">(2 burti, piem. lv)</span></label>
                 <input type="text" name="code" placeholder="lv" maxlength="10" required>
               </div>
             </div>
 
             <div class="form-group">
-              <label>Prompt for AI</label>
+              <label data-i18n="admin_label_prompt">AI Prompt</label>
               <textarea name="prompt" rows="3"
                 style="width:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;padding:10px 14px;resize:vertical;outline:none;font-family:inherit;"
-                placeholder="Write a welcome description for tourists visiting Latvia. Mention the capital Riga, local culture, top attraction, and a useful tip."></textarea>
+                placeholder="Uzraksti sagaidīšanas aprakstu tūristiem, kuri apmeklē Latviju. Piemin galvaspilsētu Rīgu, vietējo kultūru, galveno apskates vietu un noderīgu padomu."></textarea>
             </div>
 
             <div class="form-group">
-              <label>Description <span style="font-size:11px;color:var(--text-muted);">(shown to users — edit freely or generate with AI)</span></label>
+              <label data-i18n="admin_label_country_desc">Description <span style="font-size:11px;color:var(--text-muted);">(rādāms lietotājiem — rediģē brīvi vai ģenerē ar AI)</span></label>
               <textarea name="description" id="country-desc-output" rows="5"
                 style="width:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;padding:10px 14px;resize:vertical;outline:none;font-family:inherit;line-height:1.6;"
-                placeholder="AI-generated description will appear here…"></textarea>
+                placeholder="Šeit parādīsies AI ģenerētais apraksts…"></textarea>
             </div>
 
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-              <button type="submit" class="btn btn-primary" id="country-submit-btn" style="width:auto;">Save</button>
-              <button type="button" class="btn btn-ghost" id="country-generate-btn" onclick="generateCountryDescription()">✨ Generate with AI</button>
-              <button type="button" class="btn btn-ghost" onclick="cancelCountryEdit()">Cancel</button>
+              <button type="submit" class="btn btn-primary" id="country-submit-btn" style="width:auto;" data-i18n="admin_btn_save">Save</button>
+              <button type="button" class="btn btn-ghost" id="country-generate-btn" onclick="generateCountryDescription()" data-i18n="admin_btn_generate_ai">✨ Generate with AI</button>
+              <button type="button" class="btn btn-ghost" onclick="cancelCountryEdit()" data-i18n="admin_btn_cancel">Cancel</button>
               <span id="country-gen-status" style="font-size:13px;color:var(--text-muted);"></span>
             </div>
           </form>
@@ -191,17 +192,55 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>Code</th>
-                <th>Name</th>
-                <th>Description preview</th>
-                <th>Actions</th>
+                <th data-i18n="admin_th_code">Code</th>
+                <th data-i18n="admin_th_name">Name</th>
+                <th data-i18n="admin_th_preview">Description preview</th>
+                <th data-i18n="admin_th_actions">Actions</th>
               </tr>
             </thead>
             <tbody id="countries-tbody">
-              <tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">Loading…</td></tr>
+              <tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">Ielādē…</td></tr>
             </tbody>
           </table>
         </div>
+      </div>
+
+      <!-- Settings section -->
+      <div id="section-settings" style="display:none;">
+        <section class="admin-section" id="section-settings-inner">
+          <h2 data-i18n="admin_settings_title">⚙️ App Settings</h2>
+          <p style="color:var(--text-muted);font-size:14px;margin-bottom:20px;" data-i18n="admin_settings_desc">
+            Automatically applied when the user has no GPS location.
+          </p>
+          <div class="admin-form">
+            <div class="form-group">
+              <label data-i18n="admin_label_default_cat">Default POI category</label>
+              <select id="s-category" class="form-control">
+                <option value=""        data-i18n="admin_cat_all_filter">🗺️ All (no filter)</option>
+                <option value="sights"  data-i18n="admin_cat_sights_filter">🏛️ Sights</option>
+                <option value="food"    data-i18n="admin_cat_food_filter">🍽️ Food</option>
+                <option value="shopping" data-i18n="admin_cat_shopping_filter">🛍️ Shopping</option>
+                <option value="hotels"  data-i18n="admin_cat_hotels_filter">🏨 Hotels</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label data-i18n="admin_label_default_city">Default city</label>
+              <input id="s-city" type="text" class="form-control" placeholder="piem. Rīga, Latvija">
+            </div>
+            <div class="form-group" style="display:flex;gap:12px;">
+              <div style="flex:1">
+                <label data-i18n="admin_label_default_lat">Default latitude</label>
+                <input id="s-lat" type="number" step="0.0001" class="form-control" placeholder="56.9460">
+              </div>
+              <div style="flex:1">
+                <label data-i18n="admin_label_default_lng">Default longitude</label>
+                <input id="s-lng" type="number" step="0.0001" class="form-control" placeholder="24.1059">
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="saveSettings()" data-i18n="admin_btn_save_settings">💾 Save settings</button>
+            <span id="settings-status" style="margin-left:12px;font-size:13px;"></span>
+          </div>
+        </section>
       </div>
 
     </main>
@@ -222,8 +261,10 @@
       const form = document.getElementById('object-form');
       form.reset();
       delete form.dataset.editId;
-      document.getElementById('form-title').textContent = 'Add New Attraction';
-      document.getElementById('submit-btn').textContent = 'Add Attraction';
+      document.getElementById('form-title').dataset.i18n = 'admin_obj_add_title';
+      document.getElementById('form-title').textContent = t('admin_obj_add_title');
+      document.getElementById('submit-btn').dataset.i18n = 'admin_btn_add';
+      document.getElementById('submit-btn').textContent = t('admin_btn_add');
     }
 
     document.addEventListener('DOMContentLoaded', initAdmin);
