@@ -24,28 +24,6 @@ try:
 except Exception:
     pass  # column already exists
 
-# Create app_settings table if upgrading from older version
-try:
-    with engine.connect() as conn:
-        conn.execute(text("""
-            CREATE TABLE IF NOT EXISTS app_settings (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                default_category VARCHAR(50) DEFAULT 'sights',
-                default_city VARCHAR(150) DEFAULT 'Riga, Latvia',
-                default_lat FLOAT DEFAULT 56.953218,
-                default_lng FLOAT DEFAULT 24.104180,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        """))
-        # Seed a default row if empty
-        conn.execute(text("""
-            INSERT INTO app_settings (default_category, default_city, default_lat, default_lng)
-            SELECT 'sights', 'Riga, Latvia', 56.953218, 24.104180
-            WHERE NOT EXISTS (SELECT 1 FROM app_settings)
-        """))
-        conn.commit()
-except Exception:
-    pass
 
 app = FastAPI(title="AI Tourist API", version="1.0.0")
 

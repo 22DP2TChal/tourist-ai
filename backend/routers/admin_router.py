@@ -2,11 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from pydantic import BaseModel
-from ..database import get_db
+from ..database import get_db, engine as _db_engine
 from ..models import User, Chat, Message, AppSettings
 from ..schemas import AdminStats, AdminUserResponse, ChatResponse
 from ..auth import get_admin_user
-from sqlalchemy import text
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -19,31 +18,20 @@ class SettingsUpdate(BaseModel):
     default_lat: float = 56.953218
     default_lng: float = 24.104180
 
-def _ensure_settings_table(db: Session):
-    """Create app_settings table and seed a row if it doesn't exist yet."""
-    try:
-        db.execute(text("""
-            CREATE TABLE IF NOT EXISTS app_settings (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                default_category VARCHAR(50) DEFAULT 'sights',
-                default_city VARCHAR(150) DEFAULT 'Riga, Latvia',
-                default_lat FLOAT DEFAULT 56.953218,
-                default_lng FLOAT DEFAULT 24.104180,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        """))
-        db.execute(text("""
-            INSERT INTO app_settings (default_category, default_city, default_lat, default_lng)
-            SELECT '', 'Riga, Latvia', 56.953218, 24.104180
-            WHERE NOT EXISTS (SELECT 1 FROM app_settings)
-        """))
-        db.commit()
-    except Exception:
-        pass
+# Create app_settings table if missing (works for PostgreSQL + SQLite)
+try:
+    with _db_engine.begin() as _conn:
+        AppSettings.__table__.create(_conn, checkfirst=True)
+except Exception:
+    pass
+
 
 def get_or_create_settings(db: Session) -> AppSettings:
-    _ensure_settings_table(db)
-    s = db.query(AppSettings).first()
+    try:
+        s = db.query(AppSettings).first()
+    except Exception:
+        db.rollback()
+        s = db.query(AppSettings).first()
     if not s:
         s = AppSettings()
         db.add(s)
