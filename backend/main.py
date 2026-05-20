@@ -1,12 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
+from starlette.requests import Request
+from starlette.exceptions import HTTPException as StarletteHTTPException
 import os
 
 from .database import engine, Base
 from .models import User, Chat, Message, TouristObject
-from .routers import auth_router, chat_router, maps_router, admin_router, voice_router
+from .routers import auth_router, chat_router, maps_router, admin_router, voice_router, planner_router
 from .routers.maps_router import places_router
 from .routers import countries_router
 from .config import settings
@@ -24,6 +26,21 @@ except Exception:
 
 app = FastAPI(title="AI Tourist API", version="1.0.0")
 
+_frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend")
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    # API routes keep JSON errors
+    if request.url.path.startswith("/api"):
+        return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
+    # All other 404s → custom page
+    if exc.status_code == 404:
+        page_404 = os.path.join(_frontend_path, "404.html")
+        if os.path.exists(page_404):
+            return FileResponse(page_404, status_code=404)
+    return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -39,6 +56,7 @@ app.include_router(places_router)
 app.include_router(admin_router.router)
 app.include_router(voice_router.router)
 app.include_router(countries_router.router)
+app.include_router(planner_router.router)
 
 
 @app.get("/api/config")
@@ -95,4 +113,4 @@ if os.path.exists(frontend_path):
         file_path = os.path.join(frontend_path, f"{page}.html")
         if os.path.exists(file_path):
             return FileResponse(file_path)
-        return FileResponse(os.path.join(frontend_path, "index.html"))
+        return FileResponse(os.path.join(frontend_path, "404.html"), status_code=404)

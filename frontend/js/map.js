@@ -53,7 +53,7 @@ async function initMap() {
   }
 
   window.onGoogleMapsLoaded = function () {
-    map = new google.maps.Map(document.getElementById('map'), {
+    map = window.map = new google.maps.Map(document.getElementById('map'), {
       center: { lat: 56.946, lng: 24.106 },
       zoom: 14,
       styles: darkMapStyle(),
@@ -68,7 +68,7 @@ async function initMap() {
   };
 
   const script = document.createElement('script');
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&callback=onGoogleMapsLoaded`;
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places&callback=onGoogleMapsLoaded`;
   script.async = true;
   document.head.appendChild(script);
 }
@@ -415,7 +415,7 @@ function renderOverpassList(places, category) {
 
   if (!places.length) {
     listEl.innerHTML = `<p style="padding:16px;color:var(--text-muted);text-align:center;font-size:13px;">No ${def.icon} places found within ${radiusLabel}</p>`;
-    switchTab('places');
+    switchTab('chat');
     return;
   }
 
@@ -438,7 +438,7 @@ function renderOverpassList(places, category) {
     `;
   }).join('');
 
-  switchTab('places');
+  switchTab('chat');
 }
 
 // ── Toast helper ──────────────────────────────────────────────────────────────
@@ -501,7 +501,7 @@ async function updateLocationBar(lat, lng) {
 
     text.textContent = label ? '📍 ' + label : `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
     text.title       = data.display_name || '';
-    userAddress      = label || null;
+    userAddress = window.userAddress = label || null;
 
     // Show country welcome banner once per session
     if (addr.country_code) maybeShowCountryBanner(addr.country_code);
@@ -564,7 +564,7 @@ function trackLocationOnly() {
   const onPos = pos => {
     const loc    = { lat: pos.coords.latitude, lng: pos.coords.longitude };
     const isFirst = !userLocation;
-    userLocation  = loc;
+    userLocation = window.userLocation = loc;
 
     updateLocationBar(loc.lat, loc.lng);
 

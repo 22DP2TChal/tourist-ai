@@ -91,16 +91,16 @@ function initNavbar() {
   if (user) {
     navAuth.innerHTML = `
       ${langSwitcher}
-      <a href="/" ${path === '/' ? 'class="active"' : ''} data-i18n="nav_map">${t('nav_map')}</a>
-      <a href="/history.html" ${path === '/history.html' ? 'class="active"' : ''} data-i18n="nav_history">${t('nav_history')}</a>
-      ${user.is_admin ? `<a href="/admin.html" ${path === '/admin.html' ? 'class="active"' : ''} data-i18n="nav_admin">${t('nav_admin')}</a>` : ''}
+      <a href="/" class="nav-desktop-only ${path === '/' ? 'active' : ''}" data-i18n="nav_map">${t('nav_map')}</a>
+      <a href="/history.html" class="nav-desktop-only ${path === '/history.html' ? 'active' : ''}" data-i18n="nav_history">${t('nav_history')}</a>
+      ${user.is_admin ? `<a href="/admin.html" class="nav-desktop-only ${path === '/admin.html' ? 'active' : ''}" data-i18n="nav_admin">${t('nav_admin')}</a>` : ''}
       <button onclick="api.logout()" data-i18n="nav_signout">${t('nav_signout')}</button>
     `;
   } else {
     navAuth.innerHTML = `
       ${langSwitcher}
       <a href="/login.html" data-i18n="nav_signin">${t('nav_signin')}</a>
-      <a href="/register.html" style="background:var(--accent);color:white;padding:7px 16px;border-radius:8px;" data-i18n="nav_register">${t('nav_register')}</a>
+      <a href="/register.html" class="nav-desktop-only" style="background:var(--accent);color:white;padding:7px 16px;border-radius:8px;" data-i18n="nav_register">${t('nav_register')}</a>
     `;
   }
 

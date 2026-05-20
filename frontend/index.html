@@ -33,6 +33,15 @@
     <div class="navbar-links" id="nav-auth"></div>
   </nav>
 
+  <!-- Smart info button — outside map-wrapper so Google Maps can't touch it -->
+  <div class="map-info-btn" id="map-info-btn" onclick="toggleInfoSheet()">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="10" stroke="#60a5fa" stroke-width="1.8"/>
+      <circle cx="12" cy="8" r="1.3" fill="#60a5fa"/>
+      <line x1="12" y1="12" x2="12" y2="17" stroke="#60a5fa" stroke-width="2.2" stroke-linecap="round"/>
+    </svg>
+  </div>
+
   <div class="app-layout">
 
     <div class="map-wrapper">
@@ -50,15 +59,6 @@
       <!-- POI sub-filter bar (food types / distance) — shown contextually -->
       <div class="poi-sub-bar" id="poi-sub-bar" style="display:none;"></div>
 
-      <!-- Smart info button -->
-      <div class="map-info-btn" id="map-info-btn" onclick="toggleInfoSheet()" role="button" tabindex="0">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="12" r="10" stroke="#60a5fa" stroke-width="1.8"/>
-          <circle cx="12" cy="8" r="1.3" fill="#60a5fa"/>
-          <line x1="12" y1="12" x2="12" y2="17" stroke="#60a5fa" stroke-width="2.2" stroke-linecap="round"/>
-        </svg>
-      </div>
-
       <div class="map-controls">
         <button class="map-btn" onclick="locateUser()" data-i18n="btn_my_location"></button>
         <button class="map-btn" onclick="loadObjectMarkers()" data-i18n="btn_reload"></button>
@@ -70,6 +70,15 @@
         <p id="info-desc" style="white-space:pre-line;"></p>
         <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">📍 <span id="info-location"></span></p>
         <button class="btn btn-primary btn-sm" id="ask-ai-btn" data-i18n="btn_ask_ai"></button>
+      </div>
+
+
+      <!-- Step-by-step route navigation button -->
+      <div class="route-nav" id="route-nav" style="display:none;">
+        <div class="route-nav-info" id="route-nav-info"></div>
+        <div class="route-nav-actions">
+          <button class="route-nav-btn" id="route-nav-btn" onclick="routeNavNext()"></button>
+        </div>
       </div>
 
       <!-- Info modal -->
@@ -87,11 +96,11 @@
       </div>
     </div>
 
-    <div class="chat-panel">
+    <div class="chat-panel" id="chat-panel">
 
       <div class="chat-tabs">
         <div class="chat-tab active" id="tab-chat"   onclick="switchTab('chat')"   data-i18n="tab_chat"></div>
-        <div class="chat-tab"        id="tab-places" onclick="switchTab('places')" data-i18n="tab_nearby"></div>
+        <div class="chat-tab"        id="tab-myday"  onclick="switchTab('myday')">✨ My Day</div>
         <div class="chat-tab"        id="tab-live"   onclick="switchTab('live')"   data-i18n="tab_live"></div>
       </div>
 
@@ -132,12 +141,112 @@
         </div>
       </div>
 
-      <div class="tab-panel" id="panel-places">
-        <div class="chat-header">
-          <h3 data-i18n="nearby_title"></h3>
+      <div class="tab-panel" id="panel-myday">
+
+        <!-- ── FORM view ── -->
+        <div id="dp-form-view">
+          <div class="dp-tab-header">
+            <span class="dp-header-icon">✨</span>
+            <h3>Plan My Day</h3>
+          </div>
+          <div class="dp-body">
+            <div class="dp-section">
+              <div class="dp-label">📍 Where would you like to go?</div>
+              <div class="dp-pills" id="dp-places">
+                <div class="dp-pill active" data-val="Museums"    onclick="toggleDpPill(this)">🏛️ Museums</div>
+                <div class="dp-pill"        data-val="Parks"      onclick="toggleDpPill(this)">🌳 Parks</div>
+                <div class="dp-pill active" data-val="Landmarks"  onclick="toggleDpPill(this)">⭐ Landmarks</div>
+                <div class="dp-pill"        data-val="Art"        onclick="toggleDpPill(this)">🎨 Art</div>
+                <div class="dp-pill"        data-val="Historical" onclick="toggleDpPill(this)">🏰 Historical</div>
+                <div class="dp-pill"        data-val="Viewpoints" onclick="toggleDpPill(this)">🌆 Viewpoints</div>
+              </div>
+            </div>
+
+            <div class="dp-section">
+              <div class="dp-label">⏱️ Available time — <strong id="dp-hours-label">4 hours</strong></div>
+              <div class="dp-slider-wrap">
+                <span style="font-size:12px;color:var(--text-muted)">1h</span>
+                <input class="dp-slider" type="range" id="dp-hours" min="1" max="12" value="4"
+                       oninput="document.getElementById('dp-hours-label').textContent = this.value + (this.value==1?' hour':' hours'); document.getElementById('dp-slider-display').textContent = this.value + 'h'">
+                <span class="dp-slider-val" id="dp-slider-display">4h</span>
+              </div>
+            </div>
+
+            <div class="dp-section">
+              <div class="dp-label">🍽️ Food preference</div>
+              <div class="dp-pills" id="dp-food">
+                <div class="dp-pill active" data-val="No preference" onclick="selectDpPill(this,'dp-food')">🌍 Any</div>
+                <div class="dp-pill" data-val="Local"    onclick="selectDpPill(this,'dp-food')">🥘 Local</div>
+                <div class="dp-pill" data-val="Asian"    onclick="selectDpPill(this,'dp-food')">🍜 Asian</div>
+                <div class="dp-pill" data-val="European" onclick="selectDpPill(this,'dp-food')">🍕 European</div>
+                <div class="dp-pill" data-val="Indian"   onclick="selectDpPill(this,'dp-food')">🍛 Indian</div>
+              </div>
+            </div>
+
+            <div class="dp-section">
+              <div class="dp-label">🛍️ Add a shopping stop?</div>
+              <div class="dp-pills" id="dp-shopping">
+                <div class="dp-pill active" data-val="No"  onclick="selectDpPill(this,'dp-shopping')">No thanks</div>
+                <div class="dp-pill"        data-val="Yes" onclick="selectDpPill(this,'dp-shopping')">Yes please!</div>
+              </div>
+            </div>
+
+            <div class="dp-section">
+              <div class="dp-label">📏 Travel radius</div>
+              <div class="dp-pills" id="dp-radius">
+                <div class="dp-pill active" data-val="1" onclick="selectDpPill(this,'dp-radius')">1 km</div>
+                <div class="dp-pill"        data-val="2" onclick="selectDpPill(this,'dp-radius')">2 km</div>
+                <div class="dp-pill"        data-val="5" onclick="selectDpPill(this,'dp-radius')">5 km</div>
+              </div>
+            </div>
+
+            <div class="dp-section">
+              <div class="dp-label">🔄 Return back to starting point?</div>
+              <div class="dp-pills" id="dp-return">
+                <div class="dp-pill active" data-val="No"  onclick="selectDpPill(this,'dp-return')">No thanks</div>
+                <div class="dp-pill"        data-val="Yes" onclick="selectDpPill(this,'dp-return')">Yes, loop back</div>
+              </div>
+            </div>
+
+            <button class="dp-generate-btn" onclick="generateDayPlan()">✨ Generate My Day</button>
+          </div>
         </div>
-        <div id="objects-tab" style="overflow-y:auto;flex:1;"></div>
+
+        <!-- ── LOADING view ── -->
+        <div id="dp-loading-view" style="display:none;">
+          <div class="dp-loading">
+            <div class="dp-loading-globe">🌍</div>
+            <div class="dp-loading-text">Crafting your itinerary</div>
+            <div class="dp-loading-sub">This takes a few seconds</div>
+            <div class="dp-loading-dots">
+              <div class="dp-loading-dot"></div>
+              <div class="dp-loading-dot"></div>
+              <div class="dp-loading-dot"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── RESULTS view ── -->
+        <div id="dp-results-view" style="display:none;">
+          <div class="dp-tab-header">
+            <span class="dp-header-icon">🗺️</span>
+            <h3 id="dp-results-title">Your Day Plan</h3>
+            <button class="dp-back-btn" onclick="showDpForm()">← New plan</button>
+          </div>
+          <div class="dp-body">
+            <div class="dp-timeline" id="dp-timeline"></div>
+          </div>
+          <div class="dp-route-footer">
+            <button class="dp-route-btn" id="dp-route-btn" onclick="buildRouteOnMap()">
+              🗺️ Build Route on Map
+            </button>
+          </div>
+        </div>
+
       </div>
+
+      <!-- Hidden objects list (used by map.js) -->
+      <div id="objects-tab" style="display:none;"></div>
 
       <!-- Live AI tab -->
       <div class="tab-panel" id="panel-live">
@@ -194,6 +303,22 @@
     </div>
   </div>
 
+  <!-- Mobile bottom navigation bar -->
+  <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
+    <button class="mbn-btn active" id="mbn-map"   onclick="mobileTab('map')">
+      <span class="mbn-icon">🗺️</span><span class="mbn-label">Map</span>
+    </button>
+    <button class="mbn-btn" id="mbn-chat"  onclick="mobileTab('chat')">
+      <span class="mbn-icon">💬</span><span class="mbn-label">Chat</span>
+    </button>
+    <button class="mbn-btn" id="mbn-myday" onclick="mobileTab('myday')">
+      <span class="mbn-icon">✨</span><span class="mbn-label">My Day</span>
+    </button>
+    <button class="mbn-btn" id="mbn-live"  onclick="mobileTab('live')">
+      <span class="mbn-icon">📡</span><span class="mbn-label">Live AI</span>
+    </button>
+  </nav>
+
   <div id="no-auth-overlay" class="no-auth" style="display:none;">
     <div style="font-size:56px;">🌍</div>
     <h2 data-i18n="noauth_heading"></h2>
@@ -210,11 +335,24 @@
   <script src="/static/js/api.js?v=2"></script>
   <script src="/static/js/chat.js?v=9"></script>
   <script src="/static/js/live.js?v=6"></script>
-  <script src="/static/js/map.js?v=13"></script>
+  <script src="/static/js/map.js?v=15"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       applyTranslations();
       initNavbar();
+
+      // On mobile, default to Chat tab open in sheet
+      if (window.innerWidth <= 768) {
+        switchTab('chat');
+      }
+
+      // Tap on map area closes the bottom sheet on mobile
+      document.querySelector('.map-wrapper').addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+          const panel = document.getElementById('chat-panel');
+          if (panel?.classList.contains('mobile-open')) mobileTab('map');
+        }
+      });
 
       if (!api.isLoggedIn()) {
         document.getElementById('no-auth-overlay').style.display = 'flex';
@@ -232,8 +370,270 @@
       document.getElementById('info-sheet-backdrop').classList.toggle('open', open);
     }
 
+    // ── Day Plan ─────────────────────────────────────────────────────────────
+
+    function toggleDpPill(el) {
+      el.classList.toggle('active');
+    }
+
+    function selectDpPill(el, groupId) {
+      document.querySelectorAll(`#${groupId} .dp-pill`).forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    function showDpForm() {
+      document.getElementById('dp-form-view').style.display = '';
+      document.getElementById('dp-results-view').style.display = 'none';
+      document.getElementById('dp-loading-view').style.display = 'none';
+    }
+
+    function showDpLoading() {
+      document.getElementById('dp-form-view').style.display = 'none';
+      document.getElementById('dp-results-view').style.display = 'none';
+      document.getElementById('dp-loading-view').style.display = '';
+    }
+
+    function showDpResults() {
+      document.getElementById('dp-form-view').style.display = 'none';
+      document.getElementById('dp-results-view').style.display = '';
+      document.getElementById('dp-loading-view').style.display = 'none';
+    }
+
+    async function generateDayPlan() {
+      if (!api.isLoggedIn()) { window.location.href = '/login.html'; return; }
+
+      const lat = userLocation?.lat;
+      const lng = userLocation?.lng;
+      if (!lat || !lng) {
+        alert('📍 Location not detected yet — please wait a moment.');
+        return;
+      }
+
+      const places   = [...document.querySelectorAll('#dp-places .dp-pill.active')].map(p => p.dataset.val);
+      const hours    = parseInt(document.getElementById('dp-hours').value) || 4;
+      const food     = document.querySelector('#dp-food .dp-pill.active')?.dataset.val || 'No preference';
+      const shopping = document.querySelector('#dp-shopping .dp-pill.active')?.dataset.val || 'No';
+      const radius   = parseInt(document.querySelector('#dp-radius .dp-pill.active')?.dataset.val) || 2;
+
+      if (!places.length) { alert('Please select at least one place type.'); return; }
+
+      showDpLoading();
+
+      try {
+        const result = await api.post('/api/day-plan', {
+          lat, lng,
+          address:  window.userAddress || '',
+          places,
+          hours,
+          food,
+          shopping,
+          radius,
+        });
+
+        const stops = result?.stops || result;
+        renderDayPlan(Array.isArray(stops) ? stops : []);
+        showDpResults();
+      } catch (e) {
+        showDpForm();
+        alert('⚠️ ' + (e.message || 'Failed to generate plan'));
+      }
+    }
+
+    // Stores current plan stops for route building
+    let _dayPlanStops = [];
+
+    function renderDayPlan(stops) {
+      _dayPlanStops = stops;
+      const timeline = document.getElementById('dp-timeline');
+      if (!stops?.length) {
+        timeline.innerHTML = '<p style="color:var(--text-muted);padding:16px;text-align:center;">No plan generated — try again.</p>';
+        document.getElementById('dp-route-btn').style.display = 'none';
+        return;
+      }
+
+      document.getElementById('dp-results-title').textContent =
+        `Your ${document.getElementById('dp-hours').value}-hour day ✨`;
+      document.getElementById('dp-route-btn').style.display = '';
+
+      const TYPE_DOT = {
+        attraction: 'attraction', food: 'food', shopping: 'shopping',
+        transport: 'transport', break: 'break',
+      };
+
+      timeline.innerHTML = stops.map((s, i) => {
+        const dotClass = TYPE_DOT[s.type] || 'attraction';
+        const isLast   = i === stops.length - 1;
+        return `
+          <div class="dp-stop">
+            <div class="dp-stop-left">
+              <div class="dp-stop-time">${s.time || ''}</div>
+              <div class="dp-stop-line"${isLast ? ' style="display:none"' : ''}></div>
+            </div>
+            <div class="dp-stop-dot ${dotClass}">${s.emoji || '📍'}</div>
+            <div class="dp-stop-content">
+              <div class="dp-stop-name">${escHtml(s.name || '')}</div>
+              <div class="dp-stop-meta">${escHtml(s.duration || '')}${s.address ? ' · ' + escHtml(s.address) : ''}</div>
+              <div class="dp-stop-desc">${escHtml(s.description || '')}</div>
+              ${s.tip ? `<div class="dp-stop-tip">💡 ${escHtml(s.tip)}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ── Step-by-step route navigation ──────────────────────────────────────────
+    let _routeStops  = [];   // stops with resolved {lat, lng}
+    let _routeStep   = 0;
+    let _routeSvc    = null;
+    let _routeRender = null;
+    let _geocoder    = null;
+
+    async function buildRouteOnMap() {
+      if (!_dayPlanStops.length) return;
+      if (typeof google === 'undefined' || !window.map) {
+        alert('🗺️ Google Maps is not loaded.');
+        return;
+      }
+
+      const rawStops = _dayPlanStops.filter(s => s.type !== 'transport');
+      if (rawStops.length < 2) { alert('Not enough stops to build a route.'); return; }
+
+      const btn = document.getElementById('dp-route-btn');
+      btn.textContent = '⏳ Locating stops…';
+      btn.disabled = true;
+
+      // PlacesService needs a map or a div — use the existing map
+      const placesSvc = new google.maps.places.PlacesService(window.map);
+      const userLatLng = userLocation
+        ? new google.maps.LatLng(userLocation.lat, userLocation.lng)
+        : null;
+
+      // Find each stop using Places textSearch (much more accurate than Geocoder for named POIs)
+      const findStop = stop => new Promise(resolve => {
+        // Build the best possible query: name + address hint if available
+        const query = stop.address ? `${stop.name} ${stop.address}` : stop.name;
+
+        placesSvc.textSearch({
+          query,
+          ...(userLatLng ? { location: userLatLng, radius: 10000 } : {}),
+        }, (results, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && results[0]) {
+            resolve({ ...stop, latLng: results[0].geometry.location });
+          } else {
+            // Fallback: search by name only near user
+            placesSvc.textSearch({
+              query: stop.name,
+              ...(userLatLng ? { location: userLatLng, radius: 10000 } : {}),
+            }, (r2, s2) => {
+              if (s2 === google.maps.places.PlacesServiceStatus.OK && r2[0]) {
+                resolve({ ...stop, latLng: r2[0].geometry.location });
+              } else {
+                resolve({ ...stop, latLng: null });
+              }
+            });
+          }
+        });
+      });
+
+      // textSearch is rate-limited — run sequentially to avoid OVER_QUERY_LIMIT
+      const resolved = [];
+      for (const stop of rawStops) {
+        const r = await findStop(stop);
+        resolved.push(r);
+        // small delay to stay within quota
+        await new Promise(ok => setTimeout(ok, 200));
+      }
+
+      const valid = resolved.filter(s => s.latLng !== null);
+
+      btn.textContent = '🗺️ Build Route on Map';
+      btn.disabled = false;
+
+      if (valid.length < 2) {
+        alert('⚠️ Could not locate enough stops on the map. Try again or use a different plan.');
+        return;
+      }
+
+      // Prepend user's current position as start
+      const returnBack = document.querySelector('#dp-return .dp-pill.active')?.dataset.val === 'Yes';
+      const startStop  = { name: 'Starting point', emoji: '🏁', type: 'start', latLng: userLatLng };
+
+      _routeStops = userLatLng
+        ? [startStop, ...valid, ...(returnBack ? [{ ...startStop, name: 'Starting point', emoji: '🏁', type: 'end' }] : [])]
+        : valid;
+
+      _routeStep = 0;
+
+      _routeSvc = _routeSvc || new google.maps.DirectionsService();
+      if (!_routeRender) {
+        _routeRender = new google.maps.DirectionsRenderer({
+          map: window.map,
+          suppressMarkers: false,
+          polylineOptions: { strokeColor: '#3b82f6', strokeWeight: 5, strokeOpacity: 0.9 },
+        });
+      } else {
+        _routeRender.setMap(window.map);
+      }
+
+      // On mobile — close the sheet so the map is fully visible
+      if (window.innerWidth <= 768) mobileTab('map');
+
+      _navigateStep();
+    }
+
+    function _navigateStep() {
+      const from   = _routeStops[_routeStep];
+      const to     = _routeStops[_routeStep + 1];
+      const isLast = _routeStep + 2 === _routeStops.length;
+
+      const navEl  = document.getElementById('route-nav');
+      const infoEl = document.getElementById('route-nav-info');
+      const btnEl  = document.getElementById('route-nav-btn');
+
+      navEl.style.display = 'flex';
+      infoEl.innerHTML = `
+        <span class="route-nav-step">${_routeStep + 1} / ${_routeStops.length - 1}</span>
+        <span class="route-nav-arrow">→</span>
+        <span class="route-nav-dest">${to.emoji || '📍'} ${to.name}</span>
+      `;
+      const isReturn = isLast && to.type === 'end';
+      btnEl.textContent = isLast ? (isReturn ? '🏁 Finish & Return' : '✅ Finish Route') : 'Next stop →';
+      btnEl.className   = 'route-nav-btn' + (isLast ? ' finish' : '');
+      btnEl.disabled    = true;
+
+      _routeSvc.route({
+        origin:      from.latLng,
+        destination: to.latLng,
+        travelMode:  google.maps.TravelMode.WALKING,
+      }, (result, status) => {
+        btnEl.disabled = false;
+        if (status === 'OK') {
+          _routeRender.setDirections(result);
+          window.map.fitBounds(result.routes[0].bounds);
+        } else {
+          btnEl.disabled = false;
+          showMapToast('⚠️ Could not route to ' + to.name);
+        }
+      });
+    }
+
+    function routeNavNext() {
+      const isLast = _routeStep + 2 === _routeStops.length;
+      if (isLast) {
+        document.getElementById('route-nav').style.display = 'none';
+        if (_routeRender) _routeRender.setMap(null);
+        showMapToast('🎉 Route complete!');
+        return;
+      }
+      _routeStep++;
+      _navigateStep();
+    }
+
+    function escHtml(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
     function switchTab(tab) {
-      // Stop camera if leaving live tab
       const wasLive = document.getElementById('panel-live')?.classList.contains('active');
       if (wasLive && tab !== 'live') onLiveTabLeave?.();
 
@@ -242,6 +642,32 @@
       document.getElementById('tab-' + tab).classList.add('active');
       document.getElementById('panel-' + tab).classList.add('active');
     }
+
+    // ── Mobile navigation ─────────────────────────────────────────────────────
+    function mobileTab(tab) {
+      const panel   = document.getElementById('chat-panel');
+      const wasLive = document.getElementById('panel-live')?.classList.contains('active');
+      const infoBtn = document.getElementById('map-info-btn');
+
+      // Highlight bottom nav button
+      document.querySelectorAll('.mbn-btn').forEach(b => b.classList.remove('active'));
+      const mbnBtn = document.getElementById('mbn-' + tab);
+      if (mbnBtn) mbnBtn.classList.add('active');
+
+      if (tab === 'map') {
+        // Close bottom sheet, show info button
+        if (panel) panel.classList.remove('mobile-open');
+        if (infoBtn) infoBtn.style.display = '';
+        if (wasLive) onLiveTabLeave?.();
+        return;
+      }
+
+      // Open bottom sheet, hide info button
+      if (infoBtn) infoBtn.style.display = 'none';
+      if (panel) panel.classList.add('mobile-open');
+      switchTab(tab);
+    }
+
   </script>
 </body>
 </html>
