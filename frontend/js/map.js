@@ -56,7 +56,7 @@ async function initMap() {
     map = window.map = new google.maps.Map(document.getElementById('map'), {
       center: { lat: 56.953218, lng: 24.104180 },
       zoom: 14,
-      styles: darkMapStyle(),
+      styles: (typeof getTheme === 'function' && getTheme() === 'light') ? [] : darkMapStyle(),
       disableDefaultUI: false,
       mapTypeControl: false,
       streetViewControl: false,
@@ -577,7 +577,7 @@ function trackLocationOnly() {
 
   const onErr = async () => {
     try {
-      const s = await api.get('/api/settings');
+      const s = await api.get('/api/admin/settings');
       const loc = { lat: s.default_lat, lng: s.default_lng };
       userLocation = window.userLocation = loc;
       updateLocationBar(loc.lat, loc.lng);
@@ -609,7 +609,7 @@ function trackLocationOnly() {
 
 async function applySettingsFallback() {
   try {
-    const s = await api.get('/api/settings');
+    const s = await api.get('/api/admin/settings');
     const loc = { lat: s.default_lat, lng: s.default_lng };
     userLocation = window.userLocation = loc;
     updateLocationBar(loc.lat, loc.lng);
@@ -650,3 +650,10 @@ function darkMapStyle() {
     { featureType: 'administrative.land_parcel', elementType: 'labels', stylers: [{ visibility: 'off' }] },
   ];
 }
+
+// Called by toggleTheme() in i18n.js whenever the user switches theme
+window.updateMapTheme = function () {
+  if (!map) return;
+  const isLight = typeof getTheme === 'function' && getTheme() === 'light';
+  map.setOptions({ styles: isLight ? [] : darkMapStyle() });
+};

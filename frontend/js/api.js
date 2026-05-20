@@ -84,6 +84,7 @@ function initNavbar() {
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="lv" onclick="setLang('lv')">LV</button>
     </div>
+    <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme">☀️</button>
   `;
 
   const path = window.location.pathname;
@@ -105,6 +106,7 @@ function initNavbar() {
   }
 
   updateLangSwitcher();
+  if (typeof applyTheme === 'function') applyTheme();
 }
 
 function showAlert(el, message, type = 'error') {

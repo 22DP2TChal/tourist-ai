@@ -24,11 +24,13 @@ def get_or_create_settings(db: Session) -> AppSettings:
     return s
 
 @router.get("")
+@router.get("/")
 def get_settings(db: Session = Depends(get_db)):
     """Public — frontend reads this to get defaults"""
     return get_or_create_settings(db)
 
 @router.put("")
+@router.put("/")
 def update_settings(
     data: SettingsUpdate,
     db: Session = Depends(get_db),

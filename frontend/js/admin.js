@@ -300,7 +300,7 @@ async function deleteCountry(id, name) {
 
 async function loadSettings() {
   try {
-    const s = await api.get('/api/settings');
+    const s = await api.get('/api/admin/settings');
     document.getElementById('s-category').value = s.default_category || '';
     document.getElementById('s-city').value = s.default_city || '';
     document.getElementById('s-lat').value = s.default_lat || '';
@@ -317,7 +317,7 @@ async function saveSettings() {
   };
   const status = document.getElementById('settings-status');
   try {
-    await api.put('/api/settings', data);
+    await api.put('/api/admin/settings', data);
     status.textContent = t('admin_saved');
     status.style.color = 'var(--success)';
   } catch(e) {

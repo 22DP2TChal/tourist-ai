@@ -473,3 +473,28 @@ function updateLangSwitcher() {
     btn.classList.toggle('lang-btn-active', btn.dataset.lang === lang);
   });
 }
+
+// ── Theme ───────────────────────────────────────────────────
+
+function getTheme() {
+  return localStorage.getItem('theme') || 'dark';
+}
+
+function applyTheme() {
+  const isDark = getTheme() === 'dark';
+  document.body.classList.toggle('light', !isDark);
+  document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+    btn.textContent = isDark ? '☀️' : '🌙';
+    btn.title = isDark ? 'Switch to light theme' : 'Switch to dark theme';
+  });
+}
+
+function toggleTheme() {
+  localStorage.setItem('theme', getTheme() === 'dark' ? 'light' : 'dark');
+  applyTheme();
+  // Update Google Maps style if map is loaded
+  if (typeof window.updateMapTheme === 'function') window.updateMapTheme();
+}
+
+// Apply theme immediately on script load (prevents flash)
+applyTheme();

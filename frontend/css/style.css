@@ -15,6 +15,19 @@
   --shadow: 0 4px 24px rgba(0,0,0,0.4);
 }
 
+/* ── Light theme ── */
+body.light {
+  --bg-dark:    #f0f4f8;
+  --bg-panel:   #ffffff;
+  --bg-card:    #e8eef5;
+  --border:     #cbd5e1;
+  --text:       #0f172a;
+  --text-muted: #64748b;
+  --ai-bubble:  #dbeafe;
+  --user-bubble:#2563eb;
+  --shadow:     0 4px 24px rgba(0,0,0,0.10);
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -74,6 +87,21 @@ body {
 
 /* ── Language switcher ── */
 .lang-switcher { display: flex; gap: 2px; background: var(--bg-card); border-radius: 8px; padding: 3px; margin-right: 6px; }
+
+/* ── Theme toggle ── */
+.theme-toggle-btn {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  border: none;
+  background: var(--bg-card);
+  cursor: pointer;
+  font-size: 17px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, transform 0.15s;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+.theme-toggle-btn:hover { background: var(--border); transform: scale(1.1); }
 
 .lang-btn {
   padding: 4px 10px;
@@ -284,6 +312,10 @@ body {
 }
 
 .message.ai .message-time { text-align: left; }
+
+/* Light theme: timestamps need dark color on light bubbles */
+body.light .message-time          { color: rgba(0,0,0,0.40); }
+body.light .message.ai .message-time { color: rgba(0,0,0,0.38); }
 
 .typing-indicator {
   display: flex;
@@ -1817,6 +1849,7 @@ body {
     border: 1px solid var(--border);
     color: var(--text-muted);
   }
+  .theme-toggle-btn { width: 30px; height: 30px; font-size: 15px; margin-right: 2px; }
 
   /* ── App layout ── */
   .app-layout {
@@ -1960,3 +1993,14 @@ body {
   .mbn-icon  { font-size: 22px; }
   .poi-filter-btn { padding: 5px 8px; font-size: 11px; }
 }
+
+/* ── Light theme overrides for hardcoded colors ── */
+body.light .info-modal { background: linear-gradient(160deg, #ffffff 0%, #f0f4f8 100%); }
+body.light .location-bar { background: rgba(240,244,248,0.95); }
+body.light .mobile-sheet { background: var(--bg-panel); box-shadow: 0 -8px 40px rgba(0,0,0,0.12); }
+body.light .mobile-bottom-nav { box-shadow: 0 -4px 20px rgba(0,0,0,0.08); }
+body.light .message.ai .md th { background: rgba(0,0,0,0.06); }
+body.light input, body.light textarea, body.light select { color: var(--text); }
+body.light .auth-card { background: var(--bg-panel); box-shadow: 0 4px 40px rgba(0,0,0,0.10); }
+body.light .dp-overlay { background: rgba(0,0,0,0.3); }
+body.light .country-banner { background: linear-gradient(160deg, #dbeafe 0%, #eff6ff 100%); }
